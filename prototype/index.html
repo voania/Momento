@@ -261,6 +261,63 @@ body {
 .setting-toggle.on::after { transform:translateX(20px); }
 .setting-action { color:var(--accent); font-size:14px; cursor:pointer; background:none; border:none; }
 .setting-danger { color:#ff6b6b !important; }
+
+/* ── Slideshow ── */
+.slideshow { display:none; position:fixed; inset:0; background:#000; z-index:160; overflow:hidden; }
+.slideshow.open { display:flex; align-items:center; justify-content:center; }
+.slideshow .ss-img {
+  font-size:160px; display:flex; align-items:center; justify-content:center;
+  animation: kenBurns 3.5s ease-in-out infinite alternate;
+}
+@keyframes kenBurns {
+  0% { transform:scale(1) translate(0,0); }
+  100% { transform:scale(1.08) translate(-1%,-1%); }
+}
+.slideshow .ss-controls {
+  position:absolute; bottom:0; left:0; right:0; padding:24px 16px 32px;
+  background:linear-gradient(transparent, #000000cc); display:flex;
+  align-items:center; gap:12px; transition:opacity 0.4s;
+}
+.slideshow .ss-controls.hidden { opacity:0; pointer-events:none; }
+.ss-ctrl-btn { background:#ffffff22; border:none; color:#fff; width:44px; height:44px; border-radius:50%; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.ss-ctrl-btn:active { background:#ffffff44; }
+.ss-progress { flex:1; height:3px; background:#333; border-radius:2px; overflow:hidden; }
+.ss-progress-fill { height:100%; background:var(--accent); width:0%; transition:width 0.1s linear; }
+.ss-counter { font-size:13px; color:#aaa; min-width:50px; text-align:center; }
+.ss-title { font-size:14px; color:#fff; }
+
+/* ── Lock Screen ── */
+.lock-screen { display:none; position:fixed; inset:0; background:#0f0f0f; z-index:300; flex-direction:column; align-items:center; justify-content:center; }
+.lock-screen.open { display:flex; }
+.lock-icon { font-size:64px; margin-bottom:16px; }
+.lock-title { font-size:17px; margin-bottom:4px; }
+.lock-sub { font-size:12px; color:#888; margin-bottom:24px; }
+.pin-dots { display:flex; gap:14px; margin-bottom:28px; }
+.pin-dot { width:14px; height:14px; border-radius:50%; border:2px solid #555; transition:all 0.15s; }
+.pin-dot.filled { background:var(--accent); border-color:var(--accent); }
+.pin-pad { display:grid; grid-template-columns:repeat(3,72px); gap:10px; }
+.pin-key { width:72px; height:72px; border-radius:50%; background:#1e1e2e; border:none; color:#fff; font-size:24px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.pin-key:active { background:#333; }
+.pin-key.empty { background:transparent; }
+.pin-key.del { font-size:16px; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+.lock-screen .shake { animation:shake 0.5s ease; }
+
+/* ── Onboarding ── */
+.onboard { display:none; position:fixed; inset:0; background:#0f0f0f; z-index:310; flex-direction:column; align-items:center; }
+.onboard.open { display:flex; }
+.onboard-slides { flex:1; display:flex; overflow:hidden; width:100%; }
+.onboard-slide { flex:0 0 100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 32px; transition:transform 0.35s ease; }
+.onboard-slide .ob-icon { font-size:80px; margin-bottom:24px; }
+.onboard-slide .ob-title { font-size:22px; font-weight:500; margin-bottom:8px; }
+.onboard-slide .ob-desc { font-size:14px; color:#888; text-align:center; line-height:1.6; max-width:280px; }
+.onboard-dots { display:flex; gap:8px; padding:16px; }
+.onboard-dot { width:8px; height:8px; border-radius:50%; background:#333; transition:all 0.3s; }
+.onboard-dot.active { background:var(--accent); width:24px; border-radius:4px; }
+.onboard-bottom { padding:0 32px 40px; width:100%; display:flex; gap:12px; }
+.onboard-btn { flex:1; padding:14px; border-radius:24px; border:none; font-size:16px; cursor:pointer; font-weight:500; }
+.onboard-btn.primary { background:var(--accent); color:#000; }
+.onboard-btn.ghost { background:transparent; color:#888; }
 </style>
 </head>
 <body>
@@ -410,6 +467,57 @@ body {
 <!-- Settings Modal -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal-sheet"><h3>⚙️ 设置</h3><div id="settingsContent"></div><button class="modal-cancel" id="settingsCancel">关闭</button></div>
+</div>
+
+<!-- Slideshow -->
+<div class="slideshow" id="slideshow">
+  <div class="ss-img" id="ssImg"></div>
+  <div class="ss-controls" id="ssControls">
+    <span class="ss-title" id="ssTitle"></span>
+    <span class="ss-counter" id="ssCounter"></span>
+    <div class="ss-progress"><div class="ss-progress-fill" id="ssProgressFill"></div></div>
+    <button class="ss-ctrl-btn" id="ssPrev">⏮</button>
+    <button class="ss-ctrl-btn" id="ssPlay">⏯</button>
+    <button class="ss-ctrl-btn" id="ssNext">⏭</button>
+    <button class="ss-ctrl-btn" id="ssClose">✕</button>
+  </div>
+</div>
+
+<!-- Lock Screen -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-icon">🔐</div>
+  <div class="lock-title">私密相册</div>
+  <div class="lock-sub">请输入 PIN 解锁</div>
+  <div class="pin-dots" id="pinDots">
+    <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+  </div>
+  <div class="pin-pad" id="pinPad"></div>
+</div>
+
+<!-- Onboarding -->
+<div class="onboard" id="onboard">
+  <div class="onboard-slides" id="onboardSlides">
+    <div class="onboard-slide">
+      <span class="ob-icon">☁️</span>
+      <div class="ob-title">iCloud Drive 独立相册</div>
+      <div class="ob-desc">照片存储在 iCloud Drive 中，与系统相册完全隔离，保护你的隐私</div>
+    </div>
+    <div class="onboard-slide">
+      <span class="ob-icon">🤖</span>
+      <div class="ob-title">AI 智能分类</div>
+      <div class="ob-desc">MiMo-V2.5 多模态引擎自动识别照片内容，智能打标签分类</div>
+    </div>
+    <div class="onboard-slide">
+      <span class="ob-icon">🔍</span>
+      <div class="ob-title">自然语言搜索</div>
+      <div class="ob-desc">试试"去年夏天在海边拍的日落"，AI 理解你的搜索意图</div>
+    </div>
+  </div>
+  <div class="onboard-dots" id="onboardDots"></div>
+  <div class="onboard-bottom">
+    <button class="onboard-btn ghost" id="obSkip">跳过</button>
+    <button class="onboard-btn primary" id="obNext">下一步</button>
+  </div>
 </div>
 
 <!-- Bottom Nav -->
@@ -1577,8 +1685,217 @@ document.addEventListener('keydown', e => {
       dedupOverlay.classList.remove('open');
       document.body.style.overflow = '';
     }
+    if (slideshow.classList.contains('open')) {
+      clearInterval(ssTimer); clearInterval(ssProgressTimer);
+      slideshow.classList.remove('open');
+      document.body.style.overflow = '';
+    }
   }
 });
+
+// ═══════════════════════════════════
+// Slideshow
+// ═══════════════════════════════════
+const slideshow = document.getElementById('slideshow');
+const ssImg = document.getElementById('ssImg');
+const ssControls = document.getElementById('ssControls');
+const ssTitle = document.getElementById('ssTitle');
+const ssCounter = document.getElementById('ssCounter');
+const ssProgressFill = document.getElementById('ssProgressFill');
+let ssIndex = 0, ssList = [], ssTimer = null, ssPlaying = true;
+const SS_INTERVAL = 3500;
+
+function startSlideshow(fromList, fromIndex) {
+  ssList = fromList || filterPhotos();
+  ssIndex = fromIndex || 0;
+  ssPlaying = true;
+  slideshow.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('ssPlay').textContent = '⏯';
+  showSlide();
+  resetSsTimer();
+}
+
+function showSlide() {
+  if (ssIndex < 0 || ssIndex >= ssList.length) return;
+  const p = ssList[ssIndex];
+  ssImg.textContent = p.emoji;
+  ssImg.style.background = p.color;
+  ssTitle.textContent = p.location.split('·')[1] || p.location;
+  ssCounter.textContent = `${ssIndex+1}/${ssList.length}`;
+  ssProgressFill.style.width = '0%';
+  // Reset Ken Burns
+  ssImg.style.animation = 'none';
+  requestAnimationFrame(() => { ssImg.style.animation = 'kenBurns 3.5s ease-in-out infinite alternate'; });
+}
+
+function resetSsTimer() {
+  clearInterval(ssTimer);
+  clearInterval(ssProgressTimer);
+  let progress = 0;
+  const step = 100 / (SS_INTERVAL / 100);
+  ssProgressTimer = setInterval(() => {
+    progress += step;
+    if (progress >= 100) progress = 100;
+    ssProgressFill.style.width = progress + '%';
+  }, 100);
+  if (ssPlaying) {
+    ssTimer = setInterval(() => { ssIndex = (ssIndex + 1) % ssList.length; showSlide(); resetSsTimer(); }, SS_INTERVAL);
+  }
+}
+let ssProgressTimer = null;
+
+document.getElementById('ssClose').addEventListener('click', () => {
+  clearInterval(ssTimer); clearInterval(ssProgressTimer);
+  slideshow.classList.remove('open'); document.body.style.overflow = '';
+});
+document.getElementById('ssPlay').addEventListener('click', function() {
+  ssPlaying = !ssPlaying;
+  this.textContent = ssPlaying ? '⏯' : '▶';
+  if (ssPlaying) resetSsTimer();
+  else { clearInterval(ssTimer); clearInterval(ssProgressTimer); }
+});
+document.getElementById('ssPrev').addEventListener('click', () => {
+  ssIndex = (ssIndex - 1 + ssList.length) % ssList.length; showSlide(); resetSsTimer();
+});
+document.getElementById('ssNext').addEventListener('click', () => {
+  ssIndex = (ssIndex + 1) % ssList.length; showSlide(); resetSsTimer();
+});
+// Tap to toggle controls
+slideshow.addEventListener('click', e => {
+  if (e.target === slideshow || e.target === ssImg) {
+    ssControls.classList.toggle('hidden');
+  }
+});
+// Auto-hide controls
+let hideCtrlTimer;
+function resetHideCtrl() {
+  clearTimeout(hideCtrlTimer);
+  ssControls.classList.remove('hidden');
+  hideCtrlTimer = setTimeout(() => ssControls.classList.add('hidden'), 3000);
+}
+slideshow.addEventListener('mousemove', resetHideCtrl);
+slideshow.addEventListener('touchstart', resetHideCtrl);
+
+// Add slideshow button to lightbox actions
+const lbSlideshowBtn = document.createElement('button');
+lbSlideshowBtn.id = 'lbSlideshow';
+lbSlideshowBtn.textContent = '▶ 放映';
+lbSlideshowBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  startSlideshow(currentLightboxList, currentLightboxIndex);
+});
+document.querySelector('.lb-actions').appendChild(lbSlideshowBtn);
+
+// ═══════════════════════════════════
+// Lock Screen
+// ═══════════════════════════════════
+const lockScreen = document.getElementById('lockScreen');
+const pinDots = document.getElementById('pinDots');
+const pinPad = document.getElementById('pinPad');
+let pinEntry = '';
+const CORRECT_PIN = '0000';
+let lockEnabled = true; // synced with settings toggle
+
+function buildPinPad() {
+  pinPad.innerHTML = '';
+  for (let i = 1; i <= 9; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'pin-key'; btn.textContent = i;
+    btn.addEventListener('click', () => enterPin(i));
+    pinPad.appendChild(btn);
+  }
+  const empty = document.createElement('div'); empty.className = 'pin-key empty'; pinPad.appendChild(empty);
+  const zero = document.createElement('button');
+  zero.className = 'pin-key'; zero.textContent = '0';
+  zero.addEventListener('click', () => enterPin(0));
+  pinPad.appendChild(zero);
+  const del = document.createElement('button');
+  del.className = 'pin-key del'; del.textContent = '⌫';
+  del.addEventListener('click', deletePin);
+  pinPad.appendChild(del);
+}
+
+function enterPin(d) {
+  if (pinEntry.length >= 4) return;
+  pinEntry += d;
+  updatePinDots();
+  if (pinEntry.length === 4) {
+    setTimeout(() => {
+      if (pinEntry === CORRECT_PIN) {
+        lockScreen.classList.remove('open');
+        pinEntry = '';
+        updatePinDots();
+        checkOnboard();
+      } else {
+        pinEntry = '';
+        updatePinDots();
+        lockScreen.querySelector('.pin-pad').classList.add('shake');
+        setTimeout(() => lockScreen.querySelector('.pin-pad').classList.remove('shake'), 500);
+      }
+    }, 250);
+  }
+}
+
+function deletePin() {
+  pinEntry = pinEntry.slice(0, -1);
+  updatePinDots();
+}
+
+function updatePinDots() {
+  pinDots.querySelectorAll('.pin-dot').forEach((d, i) => {
+    d.classList.toggle('filled', i < pinEntry.length);
+  });
+}
+
+buildPinPad();
+
+// ═══════════════════════════════════
+// Onboarding
+// ═══════════════════════════════════
+const onboard = document.getElementById('onboard');
+const onboardSlides = document.getElementById('onboardSlides');
+const onboardDots = document.getElementById('onboardDots');
+const totalSlides = onboardSlides.children.length;
+let obIndex = 0;
+
+// Build dots
+for (let i = 0; i < totalSlides; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'onboard-dot' + (i === 0 ? ' active' : '');
+  onboardDots.appendChild(dot);
+}
+
+function goOnboardSlide(idx) {
+  obIndex = Math.max(0, Math.min(idx, totalSlides - 1));
+  onboardSlides.style.transform = `translateX(-${obIndex * 100}%)`;
+  onboardDots.querySelectorAll('.onboard-dot').forEach((d, i) => d.classList.toggle('active', i === obIndex));
+  document.getElementById('obNext').textContent = obIndex === totalSlides - 1 ? '开始使用' : '下一步';
+}
+
+document.getElementById('obNext').addEventListener('click', () => {
+  if (obIndex === totalSlides - 1) {
+    onboard.classList.remove('open');
+    localStorage.setItem('icv_onboard_done', '1');
+    document.body.style.overflow = '';
+    showToast('欢迎使用 iCloudVault');
+  } else {
+    goOnboardSlide(obIndex + 1);
+  }
+});
+document.getElementById('obSkip').addEventListener('click', () => {
+  onboard.classList.remove('open');
+  localStorage.setItem('icv_onboard_done', '1');
+  document.body.style.overflow = '';
+});
+
+function checkOnboard() {
+  if (!localStorage.getItem('icv_onboard_done')) {
+    onboard.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    goOnboardSlide(0);
+  }
+}
 
 // ═══════════════════════════════════
 // Init
@@ -1587,6 +1904,13 @@ renderGrid();
 renderTimeline();
 renderCategoryView();
 renderMap();
+
+// Show lock screen if enabled (skip if onboarding needed)
+if (lockEnabled && localStorage.getItem('icv_onboard_done')) {
+  lockScreen.classList.add('open');
+} else if (!localStorage.getItem('icv_onboard_done')) {
+  checkOnboard();
+}
 </script>
 </body>
 </html>
