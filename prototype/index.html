@@ -3,19 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
-<title>iCloudVault</title>
+<title>MiMo 相册</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<!-- Leaflet 脚本延迟加载 — 只在打开地图视图时才加载 -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#D0BCFF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 /* ═══════════════════════════════════
-   iCloudVault — Material Design 3
+   MiMo 相册 — Material Design 3
    ═══════════════════════════════════ */
 
 /* ── MD3 Dynamic Color Tokens ── */
@@ -105,7 +104,9 @@ body {
 
 /* ── MD3 Small Top App Bar ── */
 .header {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
   padding: 4px 8px 4px 16px;
   display: flex;
   align-items: center;
@@ -114,14 +115,15 @@ body {
   padding-top: calc(4px + var(--safe-top));
   padding-left: calc(16px + var(--safe-left));
   padding-right: calc(8px + var(--safe-right));
+  border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 30%, transparent);
 }
 .logo-icon { color: var(--primary); flex-shrink: 0; }
 .logo-icon path { stroke: var(--primary); }
 .header-title {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--on-surface);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 .header .badge {
   font-size: 10px;
@@ -148,21 +150,26 @@ body {
 .header-btn.icon-only { width: 44px; height: 44px; }
 .header-btn:hover { background: rgba(var(--primary-rgb), 0.08); }
 .header-btn:active { background: rgba(var(--primary-rgb), 0.12); transform:scale(0.92); }
+.header-btn.active { background: var(--primary-container); color: var(--on-primary-container); }
 
 /* ── MD3 Search Bar ── */
 .search-bar {
-  margin: 2px 16px 0;
+  margin: 4px 16px 0;
   display: flex;
   align-items: center;
   gap: 0;
   position: relative;
   background: var(--surface-container-high);
   border-radius: 28px;
-  height: 44px;
+  height: 48px;
   padding: 0 16px;
-  transition: background var(--md-motion-duration-short) var(--md-motion-easing-standard), box-shadow var(--md-motion-duration-short) var(--md-motion-easing-standard);
+  transition: background 0.2s ease, box-shadow 0.25s ease, transform 0.2s ease;
 }
-.search-bar:focus-within { background: var(--surface-container-highest); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.search-bar:focus-within {
+  background: var(--surface-container-highest);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 0 0 2px color-mix(in srgb, var(--primary) 20%, transparent);
+  transform: scale(1.01);
+}
 .search-icon { color: var(--on-surface-variant); flex-shrink: 0; opacity: 0.7; }
 .search-bar input {
   flex: 1;
@@ -190,7 +197,8 @@ body {
 .search-sug-chips { display:flex;gap:6px;padding:4px 16px 10px;flex-wrap:wrap; }
 .search-sug-chip { padding:4px 12px;border-radius:var(--md-shape-full);font-size:12px;background:var(--surface-container);color:var(--on-surface-variant);cursor:pointer;font-weight:500;transition:background 0.15s; }
 .search-sug-chip:hover { background:var(--surface-variant); }
-.semantic-chips { display:none; margin:4px 16px 0; gap:8px; flex-wrap:wrap; align-items:center; }
+.semantic-chips { display:none; margin:4px 16px 0; gap:8px; align-items:center; flex-wrap:wrap; }
+.semantic-chips::-webkit-scrollbar { display:none; }
 .semantic-chips.show { display:flex; }
 .sem-chip { padding:4px 12px; border-radius:var(--md-shape-sm); font-size:11px; display:flex; align-items:center; gap:4px; animation:fadeIn 0.2s ease; font-weight:500; }
 .sem-chip.time { background:var(--tertiary-container); color:var(--tertiary); }
@@ -204,13 +212,9 @@ body {
   display: flex;
   gap: 6px;
   padding: 6px 16px 2px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  flex-wrap: wrap;
   align-items: center;
 }
-.filter-row::-webkit-scrollbar { display:none; }
 .filter-chip {
   padding: 5px 14px;
   border-radius: 8px;
@@ -236,10 +240,10 @@ body {
   background: var(--secondary-container);
   color: var(--on-secondary-container);
   border-color: transparent;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--secondary-container) 50%, transparent);
+  transform: scale(1.02);
 }
 .filter-chip:not(.active):active { background: rgba(var(--primary-rgb), 0.12); transform:scale(0.96); }
-.filter-chip-select.active { background: var(--primary-container); color: var(--on-primary-container); border-color: transparent; }
 .filter-chip-add {
   padding: 5px 10px;
   border-radius: var(--md-shape-sm);
@@ -265,6 +269,7 @@ body {
   color: var(--on-surface-variant);
   font-weight: 600;
 }
+.filter-chip .chip-count:empty { display: none; }
 .filter-chip.active .chip-count {
   background: rgba(0,0,0,0.08);
   color: var(--on-secondary-container);
@@ -306,9 +311,9 @@ body {
 /* ── Photo Grid ── */
 .photo-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 3px;
-  padding: 3px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 2px;
+  padding: 2px;
   padding-bottom: calc(64px + var(--safe-bottom));
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -325,10 +330,10 @@ body {
 .photo-grid::-webkit-scrollbar { width: 4px; }
 .photo-grid::-webkit-scrollbar-thumb { background: var(--outline-variant); border-radius: 4px; }
 
-.date-group-header { grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:10px 8px 4px;position:sticky;top:0;z-index:5;background:var(--surface);backdrop-filter:blur(12px); }
-.date-group-header .date-label { font-size:13px;font-weight:600;color:var(--on-surface);letter-spacing:-0.01em; }
-.date-group-header .date-count { font-size:11px;color:var(--on-surface-variant);margin-left:auto; }
-.date-group-header .date-line { flex:1;height:1px;background:var(--outline-variant);opacity:0.5; }
+.date-group-header { grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:12px 10px 6px;position:sticky;top:0;z-index:5;background:color-mix(in srgb, var(--surface) 90%, transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px); }
+.date-group-header .date-label { font-size:13px;font-weight:700;color:var(--on-surface);letter-spacing:-0.01em; }
+.date-group-header .date-count { font-size:11px;color:var(--on-surface-variant);margin-left:auto;font-weight:500; }
+.date-group-header .date-line { flex:1;height:1px;background:linear-gradient(90deg,var(--outline-variant),transparent);opacity:0.4; }
 
 .photo-card {
   position: relative;
@@ -339,28 +344,46 @@ body {
   background: var(--surface-container);
   border-radius: 2px;
   transition: transform 0.2s var(--md-motion-easing-standard),
-              box-shadow 0.2s var(--md-motion-easing-standard);
+              box-shadow 0.2s var(--md-motion-easing-standard),
+              background 0.8s ease;
 }
+/* 加载占位 — 色块 + 渐隐 */
+.photo-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: inherit;
+  opacity: 1;
+  transition: opacity 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.photo-card:has(img[src])::before { opacity: 0; pointer-events: none; }
 .photo-card:active { transform: scale(0.96); transition: transform 0.1s var(--md-motion-easing-standard); }
 @media (hover: hover) {
-  .photo-card:hover { box-shadow: var(--elevation-2); z-index: 2; }
-  .photo-card:hover img { transform: scale(1.05); }
+  .photo-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 2; }
+  .photo-card:hover img { transform: scale(1.06); }
   .photo-card:hover .card-info-overlay { opacity: 1; transform: translateY(0); }
 }
-.photo-card img { transition: transform 0.3s var(--md-motion-easing-standard); }
+.photo-card img {
+  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease, filter 0.6s ease;
+  opacity: 0;
+  filter: blur(16px);
+  transform: scale(1.08);
+}
+.photo-card:has(img[src]) img { opacity: 1; filter: blur(0); transform: scale(1); }
 .photo-card .card-info-overlay {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 20px 6px 6px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  padding: 24px 8px 8px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.65));
   color: #fff;
   font-size: 11px;
   z-index: 3;
   opacity: 0;
   transform: translateY(4px);
-  transition: opacity 0.2s, transform 0.2s;
+  transition: opacity 0.25s ease, transform 0.25s ease;
   pointer-events: none;
 }
 @media (hover: hover) {
@@ -376,7 +399,7 @@ body {
 }
 .card-info-overlay .cio-name { font-weight: 500; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-info-overlay .cio-meta { font-size: 9px; opacity: 0.7; margin-top: 1px; }
-.photo-card.stagger-in { animation: cardStaggerIn 0.3s var(--md-motion-easing-emphasized) both; }
+.photo-card.stagger-in { animation: cardStaggerIn 0.3s cubic-bezier(0.2,0,0,1) both; will-change: transform, opacity; }
 .photo-card.hidden { display: none; }
 .photo-card.selected {
   outline: 3px solid var(--primary);
@@ -445,7 +468,7 @@ body {
   z-index: 5;
   box-shadow: 0 0 0 2px var(--surface);
 }
-.photo-card.ai-tagged .ai-dot { display:block; }
+.photo-card.ai-tagged .ai-dot { display:none; }
 .photo-card .check-mark {
   display: none;
   position: absolute;
@@ -466,15 +489,18 @@ body {
 @keyframes selectModeIn { from { transform: scale(0.92); opacity: 0.7; } to { transform: scale(1); opacity: 1; } }
 .photo-card.select-mode.selected { animation: selectModeSelected 0.2s var(--md-motion-easing-emphasized) both; }
 @keyframes selectModeSelected { 0% { transform: scale(0.92); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
-.photo-card.select-mode .tag-badge, .photo-card.select-mode .fav-badge { display:none !important; }
+.photo-card.select-mode .tag-badge, .photo-card.select-mode .fav-badge, .photo-card.select-mode .pin-badge { display:none !important; }
 .photo-card .fav-badge { display:none;position:absolute;bottom:4px;left:4px;font-size:11px;z-index:5;filter:drop-shadow(0 1px 1px rgba(0,0,0,0.3)); }
 .photo-card.is-fav .fav-badge { display:block; }
+.photo-card .pin-badge { display:none;position:absolute;top:4px;right:4px;font-size:11px;z-index:5;filter:drop-shadow(0 1px 1px rgba(0,0,0,0.3)); }
+.photo-card.is-pinned .pin-badge { display:block; }
 
-@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-@keyframes viewFadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-@keyframes viewSlideIn { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
-@keyframes viewSlideOut { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-16px)} }
-@keyframes viewScaleIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+@keyframes viewFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes cardStaggerIn { from{opacity:0;transform:scale(0.92) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+@keyframes viewSlideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+@keyframes viewSlideOut { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+@keyframes viewScaleIn { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
 @keyframes viewSharedAxisIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fadeScaleIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
 @keyframes cardStaggerIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
@@ -484,7 +510,7 @@ body {
 }
 .ripple { position:fixed;border-radius:50%;pointer-events:none;z-index:85; background:radial-gradient(circle,var(--primary-container) 0%,color-mix(in srgb,var(--primary-container) 40%,transparent) 50%,transparent 70%); animation:rippleOut 0.45s ease-out forwards; }
 
-.photo-card.swiping .emoji,.photo-card.swiping .tag-badge,.photo-card.swiping .ai-dot,.photo-card.swiping .check-mark,.photo-card.swiping .fav-badge { transition:none; }
+.photo-card.swiping .emoji,.photo-card.swiping .tag-badge,.photo-card.swiping .ai-dot,.photo-card.swiping .check-mark,.photo-card.swiping .fav-badge,.photo-card.swiping .pin-badge { transition:none; }
 
 .grid-size-badge { position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--inverse-surface);color:var(--inverse-on-surface);padding:8px 18px;border-radius:var(--md-shape-lg);font-size:14px;z-index:50;pointer-events:none;opacity:0;transition:opacity 0.15s;font-weight:500;letter-spacing:0.02em; }
 .grid-size-badge.show { opacity:1; }
@@ -501,12 +527,14 @@ body {
 /* ── MD3 Bottom Toolbar ── */
 .toolbar {
   display: none;
-  background: var(--surface-container);
-  border-top: 1px solid var(--outline-variant);
+  background: color-mix(in srgb, var(--surface-container) 90%, transparent);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-top: 1px solid color-mix(in srgb, var(--outline-variant) 25%, transparent);
   padding: 8px 12px;
   align-items: center;
   z-index: 15;
-  box-shadow: var(--elevation-2);
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
   gap: 8px;
 }
 .toolbar.show { display:flex; flex-wrap:wrap; }
@@ -552,12 +580,17 @@ body {
 .pull-label { font-size:12px;color:var(--on-surface-variant);margin-left:8px;font-weight:500; }
 
 /* ── Empty State ── */
-.empty-state { display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--on-surface-variant);text-align:center; }
+.empty-state { display:none;flex-direction:column;align-items:center;justify-content:center;padding:80px 32px;color:var(--on-surface-variant);text-align:center; }
 .empty-state .empty-icon { color:var(--outline); margin-bottom:16px;opacity:0.6; }
-.empty-state .empty-illust { width:120px;height:120px;margin-bottom:20px;border-radius:50%;background:var(--surface-container-low);display:flex;align-items:center;justify-content:center; }
-.empty-state .empty-illust svg { width:56px;height:56px;opacity:0.4; }
-.empty-state .empty-text { font-size:16px;font-weight:500;color:var(--on-surface);margin-bottom:4px; }
-.empty-state .empty-sub { font-size:13px;color:var(--on-surface-variant);margin-top:4px; }
+.empty-state .empty-illust {
+  width:140px;height:140px;margin-bottom:28px;border-radius:32px;
+  background: linear-gradient(135deg, var(--surface-container-low), var(--surface-container));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.04);
+}
+.empty-state .empty-illust svg { width:64px;height:64px;opacity:0.35; }
+.empty-state .empty-text { font-size:18px;font-weight:600;color:var(--on-surface);margin-bottom:6px;letter-spacing:-0.01em; }
+.empty-state .empty-sub { font-size:13px;color:var(--on-surface-variant);margin-top:4px;line-height:1.5;max-width:260px; }
 
 /* ── MD3 Full-screen Lightbox ── */
 .lightbox {
@@ -688,6 +721,8 @@ body {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   scrollbar-width: thin;
+  transform: translateY(8px);
+  opacity: 0;
 }
 .lb-bottom::-webkit-scrollbar { width: 3px; }
 .lb-bottom::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
@@ -833,8 +868,9 @@ body {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(255,255,255,0.12);
-  border: none;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
   color: var(--inverse-on-surface);
   font-size: 22px;
   cursor: pointer;
@@ -853,13 +889,14 @@ body {
 }
 .lightbox .lb-close:hover { background: rgba(255,255,255,0.2); }
 .lightbox .lb-close:active { background: rgba(255,255,255,0.28); }
-.lightbox .lb-actions { display:flex;gap:8px; }
+.lightbox .lb-actions { display:flex;gap:8px;flex-wrap:wrap;justify-content:center; }
 .lightbox .lb-actions button {
-  background: rgba(255,255,255,0.12);
-  border: none;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border: 1px solid rgba(255,255,255,0.08);
   color: var(--inverse-on-surface);
   border-radius: var(--md-shape-full);
-  padding: 0 16px;
+  padding: 0 14px;
   height: 36px;
   font-size: 13px;
   cursor: pointer;
@@ -911,7 +948,7 @@ body {
   transition: all 0.4s cubic-bezier(0.05, 0.7, 0.1, 1);
 }
 .hero-clone img { display:block; }
-.hero-clone .swipe-bg, .hero-clone .check-mark, .hero-clone .fav-badge, .hero-clone .ai-dot, .hero-clone .tag-badge { display: none !important; }
+.hero-clone .swipe-bg, .hero-clone .check-mark, .hero-clone .fav-badge, .hero-clone .ai-dot, .hero-clone .tag-badge, .hero-clone .pin-badge { display: none !important; }
 .lightbox.animating { opacity:1; pointer-events:none; transition: background 0.5s var(--md-motion-easing-standard); }
 .lightbox.animating .lb-img,
 .lightbox.animating .lb-date,
@@ -922,15 +959,15 @@ body {
 .lightbox.animating .lb-nav,
 .lightbox.animating .lb-bottom,
 .lightbox.animating .exif-card { opacity:0; transition:none; }
-.lightbox.open { opacity:1; background:var(--inverse-surface); transition: opacity 0.3s var(--md-motion-easing-standard), background 0.4s var(--md-motion-easing-standard); }
-.lightbox.open .lb-img { opacity:1; transition:opacity 0.3s var(--md-motion-easing-decelerated) 0.05s, transform 0.3s var(--md-motion-easing-emphasized); transform:scale(1); }
+.lightbox.open { opacity:1; background:var(--inverse-surface); transition: opacity 0.35s cubic-bezier(0.4,0,0.2,1), background 0.4s cubic-bezier(0.4,0,0.2,1); }
+.lightbox.open .lb-img { opacity:1; transition:opacity 0.3s cubic-bezier(0,0,0.2,1) 0.05s, transform 0.35s cubic-bezier(0.4,0,0.2,1); transform:scale(1); }
 .lightbox.open .lb-date,
 .lightbox.open .lb-tags,
 .lightbox.open .lb-actions,
 .lightbox.open .lb-counter,
 .lightbox.open .lb-close,
-.lightbox.open .lb-nav,
-.lightbox.open .lb-bottom { opacity:1; transition:opacity 0.3s var(--md-motion-easing-decelerated) 0.15s; }
+.lightbox.open .lb-nav { opacity:1; transition:opacity 0.3s cubic-bezier(0,0,0.2,1) 0.15s; }
+.lightbox.open .lb-bottom { opacity:1; transform:translateY(0); transition:opacity 0.35s cubic-bezier(0,0,0.2,1) 0.12s, transform 0.4s cubic-bezier(0.4,0,0.2,1) 0.1s; }
 .hero-clone.shrink { border-radius:var(--md-shape-xs) !important; transition:all 0.3s cubic-bezier(0.4,0,0.2,1); }
 
 /* ── Favorite ── */
@@ -940,8 +977,8 @@ body {
 @keyframes heartBump { 0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)} }
 
 /* ── EXIF ── */
-.exif-card { display:none;background:var(--surface-container-high);border-radius:var(--md-shape-lg);padding:18px;max-width:80vw;margin-top:14px;transform-origin:top center; }
-.exif-card.show { display:block;animation:exifSlideIn 0.3s var(--md-motion-easing-emphasized); }
+.exif-card { display:none;background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--md-shape-lg);padding:20px;max-width:80vw;margin-top:14px;transform-origin:top center;border:1px solid rgba(255,255,255,0.1); }
+.exif-card.show { display:block;animation:exifSlideIn 0.35s cubic-bezier(0.4,0,0.2,1); }
 @keyframes exifSlideIn { from{opacity:0;transform:translateY(-12px) scaleY(0.95)} to{opacity:1;transform:translateY(0) scaleY(1)} }
 .exif-card .exif-row { display:grid;grid-template-columns:repeat(2,1fr);gap:8px 20px;font-size:11px; }
 .exif-card .exif-item { display:flex;justify-content:space-between;color:var(--on-surface-variant); }
@@ -985,7 +1022,7 @@ body {
 /* ── MD3 FAB ── */
 .fab {
   position: fixed;
-  bottom: calc(80px + var(--safe-bottom));
+  bottom: calc(96px + var(--safe-bottom));
   right: calc(16px + var(--safe-right));
   width: 56px;
   height: 56px;
@@ -996,7 +1033,7 @@ body {
   font-size: 28px;
   cursor: pointer;
   box-shadow: var(--elevation-3);
-  z-index: 20;
+  z-index: 40;
   transition: all 0.3s cubic-bezier(0.2,0,0,1);
   display: flex;
   align-items: center;
@@ -1009,7 +1046,7 @@ body {
 
 .fab-menu {
   position: fixed;
-  bottom: calc(148px + var(--safe-bottom));
+  bottom: calc(164px + var(--safe-bottom));
   right: calc(16px + var(--safe-right));
   display: flex;
   flex-direction: column;
@@ -1162,82 +1199,94 @@ body {
 /* ── MD3 Navigation Bar ── */
 .bottom-nav {
   display: flex;
-  justify-content: space-around;
-  padding: 0 8px;
-  padding-bottom: calc(12px + var(--safe-bottom));
-  background: var(--surface-container);
-  z-index: 10;
-  box-shadow: 0 -1px 3px rgba(0,0,0,0.06);
+  justify-content: space-evenly;
+  padding: 12px 0 0;
+  padding-bottom: calc(16px + var(--safe-bottom));
+  background: color-mix(in srgb, var(--surface-container) 88%, transparent);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  z-index: 50;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+  border-top: 1px solid color-mix(in srgb, var(--outline-variant) 25%, transparent);
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-snap-type: x mandatory;
 }
+.bottom-nav::-webkit-scrollbar { display:none; }
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   color: var(--on-surface-variant);
-  font-size: 11px;
+  font-size: 12px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px 0;
+  padding: 8px 0 4px;
   transition: color var(--md-motion-duration-short) var(--md-motion-easing-standard);
   font-weight: 500;
   position: relative;
-  overflow: hidden;
-  min-width: 56px;
-  flex: 1;
+  overflow: visible;
+  min-width: 64px;
+  flex: 1 0 64px;
+  -webkit-tap-highlight-color: transparent;
+  scroll-snap-align: center;
 }
-.nav-item::after { content:'';position:absolute;inset:0;background:transparent;transition:background 0.15s;border-radius:var(--md-shape-full); }
-.nav-item:active::after { background:rgba(var(--primary-rgb),0.12); }
+.nav-item::after { display:none; }
 .nav-item.active { color:var(--on-surface); }
 .nav-item .nav-indicator {
   position: absolute;
-  top: 4px;
+  top: 2px;
   left: 50%;
   transform: translateX(-50%);
   width: 0;
-  height: 28px;
-  border-radius: 14px;
+  height: 32px;
+  border-radius: 16px;
   background: var(--secondary-container);
   z-index: -1;
   transition: width var(--md-motion-duration-medium) var(--md-motion-easing-emphasized);
 }
-.nav-item.active .nav-indicator { width: 56px; }
+.nav-item.active .nav-indicator { width: 0; }
 .nav-item svg { width:24px;height:24px;position:relative;z-index:1;transition:transform 0.2s var(--md-motion-easing-emphasized); }
-.nav-item.active svg { fill:var(--on-secondary-container);transform:scale(1.08); }
-.nav-item:not(.active) svg { fill:var(--on-surface-variant);opacity:0.6; }
+.nav-item .nav-icon.outline { display:block;color:var(--on-surface-variant);opacity:0.65; }
+.nav-item .nav-icon.filled { display:none;color:var(--on-secondary-container); }
+.nav-item.active .nav-icon.outline { display:none; }
+.nav-item.active .nav-icon.filled { display:block; }
+.nav-item.active svg { transform:scale(1.05); }
 .nav-item span { position:relative;z-index:1;letter-spacing:0.02em; }
 .nav-item.active span { font-weight:600; }
-.nav-badge { position:absolute;top:2px;right:6px;background:var(--error);color:#fff;font-size:9px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600;z-index:5;padding:0 4px; }
+.nav-badge { position:absolute !important;top:-2px;right:calc(50% - 24px);background:var(--error);color:#fff;font-size:9px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:600;z-index:5;padding:0 4px;box-shadow:0 1px 3px rgba(0,0,0,0.3); }
 .nav-badge:empty { display:none; }
 
 /* ── Timeline ── */
-.timeline-view { display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px;padding-bottom:calc(64px + var(--safe-bottom));background:var(--surface); }
+.timeline-view { display:none;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0;padding-bottom:calc(80px + var(--safe-bottom));background:var(--surface); }
 .timeline-view.active { display:block; }
-.timeline-group { margin-bottom:20px; }
+.timeline-group { margin-bottom:16px; }
 .timeline-label {
   font-size: 14px;
   color: var(--on-surface);
   font-weight: 500;
-  margin-bottom: 10px;
   position: sticky;
   top: 0;
   background: var(--surface);
-  padding: 8px 0;
+  padding: 10px 12px 8px;
   z-index: 2;
 }
-.timeline-row { display:grid;grid-template-columns:repeat(3,1fr);gap:4px; }
+.timeline-row { display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:2px;padding:0 2px; }
 .timeline-row .photo-card { padding-bottom:100%; }
 
 /* ── Category View ── */
-.category-view { display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:12px 16px;padding-bottom:calc(64px + var(--safe-bottom));background:var(--surface); }
+.category-view { display:none;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px 16px;padding-bottom:calc(80px + var(--safe-bottom));background:var(--surface); }
 .category-view.active { display:block; }
 .cat-section-title { font-size:13px;font-weight:600;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:0.06em;padding:8px 0 12px; }
-.cat-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px; }
+.cat-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;padding:0 4px; }
 .cat-card {
   background: var(--surface-container-low);
   border-radius: var(--md-shape-lg);
@@ -1245,6 +1294,7 @@ body {
   cursor: pointer;
   transition: all var(--md-motion-duration-short) var(--md-motion-easing-standard);
   box-shadow: var(--elevation-1);
+  margin-bottom: 12px;
 }
 .cat-card:active { transform:scale(0.97);box-shadow:var(--elevation-1); }
 .cat-card-preview { position:relative;height:90px;background:var(--surface-container);overflow:hidden; }
@@ -1291,7 +1341,7 @@ body {
 .fav-back:active { background:var(--surface-variant); }
 .fav-title { font-size:18px;font-weight:500;color:var(--on-surface); }
 .fav-count { font-size:13px;color:var(--on-surface-variant);margin-left:auto; }
-.fav-grid { flex:1;overflow-y:auto;padding:4px;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;align-content:start; }
+.fav-grid { flex:1;overflow-y:auto;padding:4px;display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:2px;align-content:start; }
 .fav-empty { display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--on-surface-variant);gap:8px; }
 .fav-empty.show { display:flex; }
 .fav-empty svg { opacity:0.4; }
@@ -1314,7 +1364,7 @@ body {
 .people-num { font-size:10px;color:var(--on-surface-variant); }
 .people-detail { display:none;flex-direction:column;height:100%; }
 .people-detail.active { display:flex; }
-.people-detail-grid { flex:1;overflow-y:auto;padding:4px;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;align-content:start; }
+.people-detail-grid { flex:1;overflow-y:auto;padding:4px;display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:2px;align-content:start; }
 
 .memory-card { display:none;background:var(--surface-container-high);border-radius:var(--md-shape-lg);margin:8px 16px;overflow:hidden;cursor:pointer; }
 .memory-card.show { display:block;animation:viewFadeIn 0.4s var(--md-motion-easing-emphasized); }
@@ -1329,7 +1379,7 @@ body {
 .memory-close { background:none;border:none;color:var(--on-surface-variant);cursor:pointer;padding:4px;font-size:16px;line-height:1; }
 
 /* ── Map ── */
-.map-view { display:none;flex:1;overflow:hidden;position:relative;background:var(--surface); }
+.map-view { display:none;flex:1;min-height:0;overflow:hidden;position:relative;background:var(--surface);isolation:isolate; }
 .map-view.active { display:block; }
 .map-canvas { width:100%;height:100%;position:relative;overflow:hidden; }
 .map-legend { position:absolute;bottom:12px;left:12px;background:var(--surface-container-high);border-radius:var(--md-shape-md);padding:10px 16px;font-size:11px;color:var(--on-surface-variant);display:flex;gap:16px;box-shadow:var(--elevation-1);z-index:1000; }
@@ -1396,13 +1446,13 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
 }
 
-.trash-view { display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px;padding-bottom:calc(64px + var(--safe-bottom));background:var(--surface); }
+.trash-view { display:none;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px;padding-bottom:calc(80px + var(--safe-bottom));background:var(--surface); }
 .trash-view.active { display:flex;flex-direction:column; }
 .trash-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
 .trash-title { font-size:18px;font-weight:500;color:var(--on-surface); }
 .trash-clear-all { padding:6px 16px;border-radius:var(--md-shape-full);background:var(--error-container);color:var(--error);border:none;font-size:13px;cursor:pointer;font-weight:500;transition:background 0.15s; }
 .trash-clear-all:active { background:var(--error);color:var(--on-error); }
-.trash-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:4px; }
+.trash-grid { display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:4px; }
 .trash-card { position:relative;padding-bottom:100%;border-radius:var(--md-shape-xs);overflow:hidden;background:var(--surface-container);cursor:pointer; }
 .trash-card img { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.5; }
 .trash-card .trash-overlay { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,0.3);opacity:0;transition:opacity 0.2s; }
@@ -1417,7 +1467,7 @@ body {
 .trash-empty.show { display:flex; }
 .trash-empty svg { opacity:0.4; }
 
-.albums-view { display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px;padding-bottom:calc(64px + var(--safe-bottom));background:var(--surface); }
+.albums-view { display:none;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:16px;padding-bottom:calc(80px + var(--safe-bottom));background:var(--surface); }
 .albums-view.active { display:flex;flex-direction:column; }
 .albums-header-bar { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
 .albums-title { font-size:18px;font-weight:500;color:var(--on-surface); }
@@ -1444,7 +1494,7 @@ body {
 .album-detail-add, .album-detail-del { background:none;border:none;color:var(--on-surface-variant);cursor:pointer;padding:8px;border-radius:50%;display:flex; }
 .album-detail-add:active, .album-detail-del:active { background:var(--surface-variant); }
 .album-detail-del { color:var(--error); }
-.album-detail-grid { flex:1;overflow-y:auto;padding:4px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;align-content:start; }
+.album-detail-grid { flex:1;overflow-y:auto;padding:4px;display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:4px;align-content:start; }
 .album-detail-grid .photo-card.dragging { opacity:0.4;transform:scale(0.9); }
 .album-detail-grid .photo-card.drag-over { outline:2px dashed var(--primary);outline-offset:-2px; }
 .album-detail-empty { display:none;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--on-surface-variant);font-size:14px; }
@@ -1460,6 +1510,12 @@ body {
 .ai-ring-text { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:400;color:var(--primary); }
 .ai-status { font-size:16px;color:var(--on-surface);margin-bottom:4px;text-align:center;min-height:24px;font-weight:400; }
 .ai-substatus { font-size:13px;color:var(--on-surface-variant);text-align:center; }
+.ai-token-stats { display:flex;gap:20px;margin-top:16px;justify-content:center; }
+.ai-token-stat { text-align:center; }
+.ai-token-stat .val { font-size:20px;font-weight:500;color:var(--primary);font-variant-numeric:tabular-nums; }
+.ai-token-stat .label { font-size:11px;color:var(--on-surface-variant);margin-top:2px; }
+.ai-token-bar { width:80%;max-width:360px;height:4px;background:var(--surface-variant);border-radius:2px;margin-top:12px;overflow:hidden; }
+.ai-token-bar-fill { height:100%;background:linear-gradient(90deg,var(--primary),var(--tertiary));border-radius:2px;width:0%;transition:width 0.5s; }
 .ai-log { margin-top:20px;max-height:160px;overflow-y:auto;width:80%;max-width:360px;font-family:'Roboto Mono','SF Mono','Consolas',monospace;font-size:11px;color:var(--on-surface-variant); }
 .ai-log .log-line { padding:4px 0;border-bottom:1px solid var(--outline-variant);animation:fadeIn 0.2s ease; }
 .ai-log .log-line.tag { color:var(--primary); }
@@ -1687,13 +1743,13 @@ body {
 
 @media (orientation: landscape) {
   .header { min-height: 44px; }
-  .bottom-nav { padding-top: 4px; padding-bottom: calc(8px + var(--safe-bottom)); }
+  .bottom-nav { padding-top: 8px; padding-bottom: calc(8px + var(--safe-bottom)); }
   .lock-content { max-width: 480px; }
   .pin-pad { max-width: 320px; }
   .pin-key { width: 60px; height: 60px; font-size: 22px; }
   .photo-grid { gap: 2px; }
-  .fab { bottom: calc(64px + var(--safe-bottom)); }
-  .fab-menu { bottom: calc(128px + var(--safe-bottom)); }
+  .fab { bottom: calc(80px + var(--safe-bottom)); }
+  .fab-menu { bottom: calc(144px + var(--safe-bottom)); }
   .search-bar { height: 40px; margin-top: 2px; }
   .filter-row { padding: 4px 16px 2px; }
 }
@@ -1704,6 +1760,17 @@ body {
   .modal-overlay { align-items: center; }
   .modal-sheet::before { display: none; }
   .cat-grid { grid-template-columns: repeat(3,1fr); }
+}
+
+/* ── Dark mode enhancements ── */
+@media (prefers-color-scheme: dark) {
+  .photo-card { box-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+}
+.photo-card { will-change: transform, opacity; }
+.photo-card.flipping {
+  transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1),
+              width 0.4s cubic-bezier(0.2, 0, 0, 1),
+              height 0.4s cubic-bezier(0.2, 0, 0, 1) !important;
 }
 .memory-card { display:none; margin:4px 16px; background:var(--surface-container-high); border-radius:var(--md-shape-lg); overflow:hidden; animation:viewFadeIn 0.3s var(--md-motion-easing-decelerated); }
 .memory-card.show { display:block; }
@@ -1772,7 +1839,7 @@ body {
 .hidden-back:hover { background:rgba(var(--primary-rgb),0.08); }
 .hidden-title { font-size:18px; font-weight:500; }
 .hidden-count { font-size:13px; color:var(--on-surface-variant); margin-left:auto; }
-.hidden-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; padding:4px; overflow-y:auto; flex:1; }
+.hidden-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:4px; padding:4px; overflow-y:auto; flex:1; }
 .hidden-empty { display:none; flex-direction:column; align-items:center; justify-content:center; flex:1; color:var(--on-surface-variant); text-align:center; padding:40px 20px; }
 .hidden-empty.show { display:flex; }
 .photo-card.is-hidden { opacity:0.4; }
@@ -1872,14 +1939,7 @@ body {
 .exif-edit-input:focus { border-color:var(--primary); }
 .exif-edit-btn { background:var(--primary); color:var(--on-primary); border:none; border-radius:var(--md-shape-full); padding:4px 12px; font-size:11px; cursor:pointer; font-weight:500; margin-top:8px; }
 </style>
-	<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0"></script>
-	<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1"></script>
-	<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-	<script type="module">
-	  import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
-	  window._transformersPipeline = pipeline;
-	  window._transformersEnv = env;
-	</script>
+	<!-- AI 库延迟加载 — 只在用户触发 AI 功能时才动态加载 -->
 </head>
 <body>
 
@@ -1889,9 +1949,10 @@ body {
   <svg width="26" height="26" viewBox="0 0 24 24" class="logo-icon">
     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke-width="1.5" fill="none"/>
   </svg>
-  <span class="header-title">iCloudVault</span>
+  <span class="header-title">MiMo 相册</span>
   <span class="badge">iCloud</span>
   <div class="header-actions">
+    <button class="header-btn icon-only" id="btnSelectMode" aria-label="选择照片" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="4"/><polyline points="7 12 10 15 17 8"/></svg></button>
     <button class="header-btn icon-only" id="btnAlbums" aria-label="相册管理"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
     <button class="header-btn icon-only" id="btnTheme" aria-label="切换主题"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
     <button class="header-btn icon-only" id="btnSettings" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
@@ -1910,11 +1971,13 @@ body {
 
 <div class="filter-row" id="filterRow">
   <button class="filter-chip active" data-cat="all">全部 <span class="chip-count" id="chipCountAll"></span></button>
-  <button class="filter-chip" data-cat="favorites"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:-2px"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0l-1 1-1-1a5.5 5.5 0 00-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 000-7.8z"/></svg> 收藏</button>
+  <button class="filter-chip" data-cat="favorites">❤️ 收藏 <span class="chip-count" id="chipCountFav"></span></button>
+  <button class="filter-chip" data-cat="portrait">👤 人物 <span class="chip-count" id="chipCountPortrait"></span></button>
+  <button class="filter-chip" data-cat="landscape">🏞️ 风景 <span class="chip-count" id="chipCountLandscape"></span></button>
+  <button class="filter-chip" data-cat="pet">🐾 宠物 <span class="chip-count" id="chipCountPet"></span></button>
+  <button class="filter-chip" data-cat="food">🍽️ 美食 <span class="chip-count" id="chipCountFood"></span></button>
+  <button class="filter-chip" data-cat="document">📄 文档 <span class="chip-count" id="chipCountDoc"></span></button>
   <button class="filter-chip filter-chip-add" id="addAlbumChip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 新建</button>
-</div>
-<div class="filter-row" id="filterRow2" style="padding-top:0;">
-  <button class="filter-chip filter-chip-select" id="btnSelectMode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:-2px"><rect x="3" y="3" width="18" height="18" rx="4"/><polyline points="7 12 10 15 17 8"/></svg>选择</button>
 </div>
 
 <div class="album-chip-menu" id="albumChipMenu">
@@ -2127,27 +2190,32 @@ body {
 <div class="bottom-nav" role="navigation" aria-label="主导航">
   <button class="nav-item active" data-view="grid">
     <div class="nav-indicator"></div>
-    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <svg class="nav-icon outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <svg class="nav-icon filled" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
     <span>相册</span>
   </button>
   <button class="nav-item" data-view="timeline">
     <div class="nav-indicator"></div>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <svg class="nav-icon outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14.5"/></svg>
+    <svg class="nav-icon filled" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-.5 5v5.25l4.5 2.67.75-1.23-3.75-2.22V7h-1.5z"/></svg>
     <span>时间线</span>
   </button>
   <button class="nav-item" data-view="map">
     <div class="nav-indicator"></div>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    <svg class="nav-icon outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.16 8.04A9 9 0 0 0 3.84 8.04C5.7 13.2 12 19 12 19s6.3-5.8 8.16-10.96z" fill="none"/><circle cx="12" cy="10" r="3" fill="none"/></svg>
+    <svg class="nav-icon filled" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
     <span>地图</span>
   </button>
   <button class="nav-item" data-view="category">
     <div class="nav-indicator"></div>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <svg class="nav-icon outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1.5" fill="none"/><circle cx="4" cy="12" r="1.5" fill="none"/><circle cx="4" cy="18" r="1.5" fill="none"/></svg>
+    <svg class="nav-icon filled" viewBox="0 0 24 24" fill="currentColor"><line x1="8" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="4" cy="6" r="2"/><circle cx="4" cy="12" r="2"/><circle cx="4" cy="18" r="2"/></svg>
     <span>分类</span>
   </button>
   <button class="nav-item" data-view="trash">
     <div class="nav-indicator"></div>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+    <svg class="nav-icon outline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+    <svg class="nav-icon filled" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z"/><line x1="10" y1="11" x2="10" y2="17" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="11" x2="14" y2="17" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round"/></svg>
     <span>回收站</span>
     <span class="nav-badge" id="trashBadge"></span>
   </button>
@@ -2169,11 +2237,10 @@ body {
       <div class="lb-tags" id="lbTags"></div>
       <div class="lb-actions">
         <button class="lb-heart" id="lbHeart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0l-1 1-1-1a5.5 5.5 0 00-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 000-7.8z"/></svg></button>
+        <button id="lbPin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg><span>置顶</span></button>
         <button id="lbExif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span>信息</span></button>
         <button id="lbEdit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span>编辑</span></button>
         <button id="lbShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><span>分享</span></button>
-        <button id="lbAlbum"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg><span>相册</span></button>
-        <button id="lbDraw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg><span>标注</span></button>
         <button id="lbHide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="1" y1="1" x2="23" y2="23"/></svg><span>隐藏</span></button>
         <button id="lbDelete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><line x1="10" y1="10" x2="10" y2="16"/><line x1="14" y1="10" x2="14" y2="16"/></svg><span>删除</span></button>
       </div>
@@ -2187,6 +2254,7 @@ body {
           <button class="edit-tab active" data-etab="adjust">调整</button>
           <button class="edit-tab" data-etab="filter">滤镜</button>
           <button class="edit-tab" data-etab="crop">旋转</button>
+          <button class="edit-tab" data-etab="draw">标注</button>
         </div>
         <div class="edit-tab-content active" id="etabAdjust">
           <div class="edit-slider-row">
@@ -2244,28 +2312,31 @@ body {
             <button class="crop-confirm" id="cropConfirm">确认裁剪</button>
           </div>
         </div>
+        <div class="edit-tab-content" id="etabDraw">
+          <div class="draw-toolbar" id="drawToolbar" style="position:static;bottom:auto;left:auto;right:auto;transform:none;flex-wrap:wrap;justify-content:center;border-radius:var(--md-shape-md);">
+            <button class="draw-tool active" data-tool="pen" title="画笔">✏️</button>
+            <button class="draw-tool" data-tool="arrow" title="箭头">➡️</button>
+            <button class="draw-tool" data-tool="rect" title="矩形">⬜</button>
+            <button class="draw-tool" data-tool="text" title="文字">🔤</button>
+            <div style="width:1px;height:24px;background:var(--outline-variant);margin:0 4px;"></div>
+            <span class="draw-color-dot active" data-color="#ff3b30" style="background:#ff3b30;"></span>
+            <span class="draw-color-dot" data-color="#ffcc00" style="background:#ffcc00;"></span>
+            <span class="draw-color-dot" data-color="#34c759" style="background:#34c759;"></span>
+            <span class="draw-color-dot" data-color="#007aff" style="background:#007aff;"></span>
+            <span class="draw-color-dot" data-color="#fff" style="background:#fff;"></span>
+            <input type="range" class="draw-size-slider" id="drawSizeSlider" min="1" max="10" value="3">
+            <div style="width:1px;height:24px;background:var(--outline-variant);margin:0 4px;"></div>
+            <button class="draw-tool" id="drawUndo" title="撤销">↩️</button>
+            <button class="draw-tool" id="drawDone" title="完成">✅</button>
+          </div>
+          <p style="text-align:center;color:var(--on-surface-variant);font-size:11px;margin-top:8px;">在照片上自由绘制，完成后点击 ✅ 保存标注</p>
+        </div>
         <div class="edit-actions">
           <button class="edit-reset" id="editReset">重置</button>
           <button class="edit-save" id="editSave">保存</button>
         </div>
       </div>
     </div>
-  </div>
-  <div class="draw-toolbar" id="drawToolbar">
-    <button class="draw-tool active" data-tool="pen" title="画笔">✏️</button>
-    <button class="draw-tool" data-tool="arrow" title="箭头">➡️</button>
-    <button class="draw-tool" data-tool="rect" title="矩形">⬜</button>
-    <button class="draw-tool" data-tool="text" title="文字">🔤</button>
-    <div style="width:1px;height:24px;background:rgba(255,255,255,0.2);margin:0 4px;"></div>
-    <span class="draw-color-dot active" data-color="#ff3b30" style="background:#ff3b30;"></span>
-    <span class="draw-color-dot" data-color="#ffcc00" style="background:#ffcc00;"></span>
-    <span class="draw-color-dot" data-color="#34c759" style="background:#34c759;"></span>
-    <span class="draw-color-dot" data-color="#007aff" style="background:#007aff;"></span>
-    <span class="draw-color-dot" data-color="#fff" style="background:#fff;"></span>
-    <input type="range" class="draw-size-slider" id="drawSizeSlider" min="1" max="10" value="3">
-    <div style="width:1px;height:24px;background:rgba(255,255,255,0.2);margin:0 4px;"></div>
-    <button class="draw-tool" id="drawUndo" title="撤销">↩️</button>
-    <button class="draw-tool" id="drawDone" title="完成">✅</button>
   </div>
 </div>
 
@@ -2275,8 +2346,14 @@ body {
     <div class="ai-ring-fill"></div>
     <div class="ai-ring-text" id="aiPercent">0%</div>
   </div>
-  <div class="ai-status" id="aiStatus">准备启动 MiMo-V2.5 多模态引擎...</div>
+  <div class="ai-status" id="aiStatus">准备启动 MiMo 多模态引擎...</div>
   <div class="ai-substatus" id="aiSubstatus"></div>
+  <div class="ai-token-stats">
+    <div class="ai-token-stat"><div class="val" id="aiTokenUsed">0</div><div class="label">已消耗 Token</div></div>
+    <div class="ai-token-stat"><div class="val" id="aiTokenRate">0</div><div class="label">Token/秒</div></div>
+    <div class="ai-token-stat"><div class="val" id="aiTokenEst">0</div><div class="label">预估总计</div></div>
+  </div>
+  <div class="ai-token-bar"><div class="ai-token-bar-fill" id="aiTokenBar"></div></div>
   <div class="ai-log" id="aiLog"></div>
   <button class="ai-close-btn" id="aiCloseBtn">完成</button>
 </div>
@@ -2355,7 +2432,6 @@ body {
   <button class="fab-menu-item" id="fabDedup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="2" width="20" height="14" rx="2"/><path d="M6 6h12v10H6z" opacity="0.3"/></svg>去重检测</button>
   <button class="fab-menu-item" id="fabStats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>统计</button>
   <button class="fab-menu-item" id="fabStorage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 20V10M15 20V4M9 20v-6M3 20v-2"/></svg>存储分析</button>
-  <button class="fab-menu-item" id="fabSmartAlbum"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="12 2 15 9 22 9 16 14 18 22 12 17 6 22 8 14 2 9 9 9"/></svg>智能相册</button>
   <button class="fab-menu-item" id="fabImport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>导入照片</button>
 </div>
 
@@ -2411,7 +2487,7 @@ body {
   <div class="lock-bg"></div>
   <div class="lock-content">
     <div class="lock-avatar"><svg viewBox="0 0 24 24" fill="currentColor" width="30" height="30"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
-    <div class="lock-title">iCloudVault</div>
+    <div class="lock-title">MiMo 相册</div>
 
     <div class="lock-view bio-view active" id="bioView">
       <div class="bio-icon-wrap pulse" id="bioIconWrap">
@@ -2509,6 +2585,7 @@ body {
 <div class="toast" id="toast"><span class="toast-msg"></span><button class="toast-action" id="toastAction"></button><div class="toast-progress" id="toastProgress"></div></div>
 <div class="ctx-menu" id="ctxMenu">
   <button class="ctx-item" data-action="fav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0l-1 1-1-1a5.5 5.5 0 00-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 000-7.8z"/></svg><span>收藏</span></button>
+  <button class="ctx-item" data-action="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg><span>置顶</span></button>
   <button class="ctx-item" data-action="share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg><span>分享</span></button>
   <button class="ctx-item" data-action="album"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>加入相册</span></button>
   <button class="ctx-item" data-action="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg><span>添加标签</span></button>
@@ -2517,6 +2594,87 @@ body {
 </div>
 
 <script>
+// ═══════════════════════════════════
+// IndexedDB Storage Layer
+// ═══════════════════════════════════
+const IDB_NAME = 'mimo-album';
+const IDB_VER = 1;
+let _idb = null;
+
+function openDB() {
+  if (_idb) return Promise.resolve(_idb);
+  return new Promise((ok, no) => {
+    const req = indexedDB.open(IDB_NAME, IDB_VER);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('photos')) db.createObjectStore('photos', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv', { keyPath: 'key' });
+    };
+    req.onsuccess = e => { _idb = e.target.result; ok(_idb); };
+    req.onerror = e => no(e.target.error);
+  });
+}
+
+function idbPut(store, data) {
+  return openDB().then(db => new Promise((ok, no) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).put(data);
+    tx.oncomplete = () => ok();
+    tx.onerror = e => no(e.target.error);
+  }));
+}
+
+function idbGet(store, key) {
+  return openDB().then(db => new Promise((ok, no) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).get(key);
+    req.onsuccess = () => ok(req.result);
+    req.onerror = e => no(e.target.error);
+  }));
+}
+
+function idbGetAll(store) {
+  return openDB().then(db => new Promise((ok, no) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => ok(req.result);
+    req.onerror = e => no(e.target.error);
+  }));
+}
+
+function idbDelete(store, key) {
+  return openDB().then(db => new Promise((ok, no) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).delete(key);
+    tx.oncomplete = () => ok();
+    tx.onerror = e => no(e.target.error);
+  }));
+}
+
+function idbClear(store) {
+  return openDB().then(db => new Promise((ok, no) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).clear();
+    tx.oncomplete = () => ok();
+    tx.onerror = e => no(e.target.error);
+  }));
+}
+
+// Bulk put for batch saves
+function idbBulkPut(store, items) {
+  return openDB().then(db => new Promise((ok, no) => {
+    const tx = db.transaction(store, 'readwrite');
+    const os = tx.objectStore(store);
+    items.forEach(item => os.put(item));
+    tx.oncomplete = () => ok();
+    tx.onerror = e => no(e.target.error);
+  }));
+}
+
+// ── KV helpers (for albums, smartAlbums, searchHistory) ──
+function idbKVSet(key, value) { return idbPut('kv', { key, value }); }
+function idbKVGet(key) { return idbGet('kv', key).then(r => r ? r.value : null); }
+
 // ═══════════════════════════════════
 // Mock Data
 // ═══════════════════════════════════
@@ -2547,13 +2705,12 @@ for (let i = 0; i < totalPhotos; i++) {
   const day = String((i % 28) + 1).padStart(2,'0');
   const year = month > 12 ? '2026' : (month < 10 ? '2024' : '2025');
   const m = String(month > 12 ? month - 12 : month).padStart(2,'0');
-  // 使用在线占位图片，部分图片设为长图来测试显示效果
+  // 使用本地图片，部分图片设为长图来测试显示效果
   const isLongImage = i % 5 === 0;
-  const width = 400;
-  const height = isLongImage ? 800 : 400;
+  const imgNum = String(i + 1).padStart(2, '0');
   photos.push({
     id: i,
-    img: `https://picsum.photos/${width}/${height}?random=${i}`,
+    img: `images/${imgNum}.png`,
     emoji: emojis[i % emojis.length],
     category: cat,
     color: colors[i % colors.length],
@@ -2591,6 +2748,46 @@ function getTags(cat) {
     food: ['食物','美食','餐厅'], other: ['截图','其他','素材']
   };
   return map[cat] || ['未分类'];
+}
+
+// 从图片提取主色
+function analyzeImageColor(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 1; canvas.height = 1;
+        ctx.drawImage(img, 0, 0, 1, 1);
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        // 降低饱和度做背景色，保持辨识度
+        const mix = 0.35;
+        const fr = Math.round(r + (240 - r) * mix);
+        const fg = Math.round(g + (240 - g) * mix);
+        const fb = Math.round(b + (240 - b) * mix);
+        resolve(`rgb(${fr},${fg},${fb})`);
+      } catch(e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+// 批量分析并更新卡片颜色
+function applyRealColors() {
+  photos.forEach(p => {
+    if (p._colorDone) return;
+    p._colorDone = true;
+    analyzeImageColor(p.img).then(color => {
+      if (!color) return;
+      p.color = color;
+      document.querySelectorAll(`[data-photo-id="${p.id}"]`).forEach(card => {
+        card.style.background = color;
+      });
+    });
+  });
 }
 
 // ═══════════════════════════════════
@@ -2786,6 +2983,22 @@ tbAiScan.addEventListener('click', async () => {
 });
 
 // ═══════════════════════════════════
+// Lazy Script Loader
+// ═══════════════════════════════════
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+function loadModule(src) {
+  return import(src);
+}
+
+// ═══════════════════════════════════
 // TensorFlow.js MobileNet 图像分类
 // ═══════════════════════════════════
 let _mobilenetModel = null;
@@ -2794,13 +3007,14 @@ let _mobilenetLoading = false;
 async function loadMobileNet() {
   if (_mobilenetModel) return _mobilenetModel;
   if (_mobilenetLoading) {
-    // 等待正在加载的模型
     while (_mobilenetLoading) await new Promise(r => setTimeout(r, 200));
     return _mobilenetModel;
   }
   _mobilenetLoading = true;
   try {
     showToast('🤖 正在加载 AI 模型...');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0');
+    await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1');
     _mobilenetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
     showToast('✅ AI 模型就绪');
     return _mobilenetModel;
@@ -2932,6 +3146,7 @@ const FACE_MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.j
 async function loadFaceModels() {
   if (_faceApiReady) return true;
   try {
+    await loadScript('https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js');
     await Promise.all([
       faceapi.nets.ssdMobilenetv1.loadFromUri(FACE_MODEL_URL),
       faceapi.nets.faceLandmark68Net.loadFromUri(FACE_MODEL_URL),
@@ -3101,13 +3316,13 @@ let _clipReady = false;
 
 async function loadCLIP() {
   if (_clipReady) return _clipExtractor;
-  if (!window._transformersPipeline) {
-    console.warn('Transformers.js 未加载');
-    return null;
-  }
   try {
     showToast('🧠 正在加载语义搜索模型...');
-    // 使用特征提取管道，Xenova 的 CLIP 模型
+    if (!window._transformersPipeline) {
+      const mod = await loadModule('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+      window._transformersPipeline = mod.pipeline;
+      window._transformersEnv = mod.env;
+    }
     _clipExtractor = await window._transformersPipeline(
       'feature-extraction',
       'Xenova/clip-vit-base-patch32',
@@ -3242,9 +3457,9 @@ async function sharePhotos(photoList) {
         } catch {}
       }
       if (files.length > 0 && navigator.canShare && navigator.canShare({ files })) {
-        await navigator.share({ files, title: 'iCloudVault 照片分享' });
+        await navigator.share({ files, title: 'MiMo 相册 照片分享' });
       } else {
-        await navigator.share({ title: 'iCloudVault', text: `分享 ${photoList.length} 张照片`, url: window.location.href });
+        await navigator.share({ title: 'MiMo 相册', text: `分享 ${photoList.length} 张照片`, url: window.location.href });
       }
     } catch (err) {
       if (err.name !== 'AbortError') showToast('分享失败');
@@ -3412,6 +3627,7 @@ function loadAlbums() {
 }
 function saveAlbums() {
   try { localStorage.setItem('icv_albums', JSON.stringify(albums)); } catch {}
+  idbKVSet('albums', albums).catch(() => {});
 }
 loadAlbums();
 
@@ -3797,6 +4013,21 @@ function parseSemanticQuery(query) {
   return { chips, filters };
 }
 
+// 模糊匹配：支持字符间间隔匹配，容忍小错字
+function fuzzyMatch(text, pattern) {
+  if (!pattern) return true;
+  text = text.toLowerCase();
+  pattern = pattern.toLowerCase();
+  if (text.includes(pattern)) return true;
+  let ti = 0;
+  for (let pi = 0; pi < pattern.length && ti < text.length; pi++) {
+    ti = text.indexOf(pattern[pi], ti);
+    if (ti === -1) return false;
+    ti++;
+  }
+  return true;
+}
+
 function matchSemantic(photo, filters) {
   if (!filters.raw) return true;
   const q = filters.raw.toLowerCase();
@@ -3813,9 +4044,9 @@ function matchSemantic(photo, filters) {
   if (q.includes('秋天') && !['09','10','11'].includes(month)) return false;
   if (q.includes('冬天') && !['12','01','02'].includes(month)) return false;
 
-  // 地点匹配
+  // 地点匹配（支持模糊）
   if (filters.locKeywords && filters.locKeywords.length > 0) {
-    if (!filters.locKeywords.some(kw => photo.location.toLowerCase().includes(kw.toLowerCase()))) return false;
+    if (!filters.locKeywords.some(kw => photo.location.toLowerCase().includes(kw.toLowerCase()) || fuzzyMatch(photo.location, kw))) return false;
   }
 
   // 内容匹配（增强）
@@ -3823,7 +4054,7 @@ function matchSemantic(photo, filters) {
   const allText = [...allTags, photo.location, photo.filename, photo.category].join(' ').toLowerCase();
 
   if (filters.contentKeywords && filters.contentKeywords.length > 0) {
-    if (!filters.contentKeywords.some(kw => allText.includes(kw.toLowerCase()))) return false;
+    if (!filters.contentKeywords.some(kw => allText.includes(kw.toLowerCase()) || fuzzyMatch(allText, kw))) return false;
   }
 
   // 特殊语义
@@ -3847,6 +4078,13 @@ function renderSemanticChips(chips) {
     span.textContent = c.text;
     semanticChips.appendChild(span);
   });
+  // Token 消耗指示
+  const tokenSpan = document.createElement('span');
+  tokenSpan.className = 'sem-chip token';
+  const tokenCost = 800 + chips.length * 300;
+  tokenSpan.textContent = `⚡ ~${tokenCost} Token`;
+  tokenSpan.style.cssText = 'background:var(--tertiary-container);color:var(--on-tertiary-container);font-size:10px;';
+  semanticChips.appendChild(tokenSpan);
   semanticChips.classList.add('show');
 }
 
@@ -3897,6 +4135,8 @@ function showCtxMenu(e, photo) {
   ctxPhoto = photo;
   const favItem = ctxMenu.querySelector('[data-action="fav"] span');
   favItem.textContent = photo.isFavorite ? '取消收藏' : '收藏';
+  const pinItem = ctxMenu.querySelector('[data-action="pin"] span');
+  pinItem.textContent = photo.pinned ? '取消置顶' : '置顶';
   ctxMenu.classList.add('show');
   const x = Math.min(e.clientX || e.pageX, window.innerWidth - 200);
   const y = Math.min(e.clientY || e.pageY, window.innerHeight - 280);
@@ -3917,6 +4157,11 @@ ctxMenu.addEventListener('click', e => {
     ctxPhoto.isFavorite = !ctxPhoto.isFavorite;
     savePhotoState();
     showToast(ctxPhoto.isFavorite ? '❤️ 已收藏' : '已取消收藏');
+    refreshAllViews();
+  } else if (action === 'pin') {
+    ctxPhoto.pinned = !ctxPhoto.pinned;
+    savePhotoState();
+    showToast(ctxPhoto.pinned ? '📌 已置顶' : '已取消置顶');
     refreshAllViews();
   } else if (action === 'share') {
     sharePhotos([ctxPhoto]);
@@ -4022,6 +4267,8 @@ function attachSwipe(card, photo) {
 // ═══════════════════════════════════
 function renderGrid() {
   const filtered = filterPhotos().sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
     const da = a.date + 'T' + a.time;
     const db = b.date + 'T' + b.time;
     return db.localeCompare(da);
@@ -4036,164 +4283,252 @@ function renderGrid() {
     grid.style.display = 'none';
   } else {
     grid.style.display = 'grid';
-    const BATCH_SIZE = 60;
-    let renderedCount = 0;
-    let lastDateGroup = '';
 
-    function renderBatch(startIdx) {
-      const endIdx = Math.min(startIdx + BATCH_SIZE, filtered.length);
-      const fragment = document.createDocumentFragment();
+    // Build layout items (date headers + photos)
+    const dateGroupCounts = {};
+    filtered.forEach(p => { dateGroupCounts[p.date] = (dateGroupCounts[p.date] || 0) + 1; });
+    const todayStr = new Date().toISOString().slice(0,10);
+    const yesterdayDate = new Date(); yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = yesterdayDate.toISOString().slice(0,10);
 
-      for (let idx = startIdx; idx < endIdx; idx++) {
-        const p = filtered[idx];
-        const dateGroup = p.date;
-        if (dateGroup !== lastDateGroup) {
-          lastDateGroup = dateGroup;
-          const header = document.createElement('div');
-          header.className = 'date-group-header';
-          const d = new Date(dateGroup);
-          const today = new Date();
-          const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
-          let label;
-          if (dateGroup === today.toISOString().slice(0,10)) label = '今天';
-          else if (dateGroup === yesterday.toISOString().slice(0,10)) label = '昨天';
-          else label = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-          const dayPhotos = filtered.filter(f => f.date === dateGroup);
-          header.innerHTML = `<span class="date-label">${label}</span><span class="date-line"></span><span class="date-count">${dayPhotos.length} 张</span>`;
-          fragment.appendChild(header);
+    function formatDateLabel(dateGroup) {
+      if (dateGroup === todayStr) return '今天';
+      if (dateGroup === yesterdayStr) return '昨天';
+      const d = new Date(dateGroup);
+      return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+    }
+
+    // Build ordered layout items
+    const layoutItems = [];
+    let lastDate = null;
+    filtered.forEach((p, idx) => {
+      if (p.date !== lastDate) {
+        layoutItems.push({ type: 'header', date: p.date, count: dateGroupCounts[p.date], label: formatDateLabel(p.date) });
+        lastDate = p.date;
+      }
+      layoutItems.push({ type: 'photo', photo: p, idx });
+    });
+
+    const BUFFER_ROWS = 3;
+    const cardPool = new Map();
+    const headerPool = new Map();
+
+    if (window._gridObserver) window._gridObserver.disconnect();
+    window._gridObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target.querySelector('img[data-src]');
+          if (img) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
+          window._gridObserver.unobserve(entry.target);
         }
-        const card = document.createElement('div');
-        card.className = 'photo-card' + (p.aiTags ? ' ai-tagged' : '') + (selectMode ? ' select-mode' : '') + (p.isFavorite ? ' is-fav' : '');
-        if (p.isDuplicate) card.style.outline = '2px solid #ff3b30';
-        if (selectedPhotos.has(p.id)) card.classList.add('selected');
-        card.style.background = p.color;
-        card.innerHTML = `
-          <div class="swipe-bg delete">🗑</div>
-          <div class="swipe-bg fav">❤️</div>
-          <img data-src="${p.img}" alt="${p.filename}" loading="lazy">
-          <div class="ai-dot"></div>
-          <div class="check-mark">✓</div>
-          <span class="fav-badge">❤️</span>
-          <div class="card-info-overlay"><div class="cio-name">${p.filename}</div><div class="cio-meta">${p.date} · ${p.location}</div></div>
-        `;
-        card.dataset.photoId = p.id;
-        attachSwipe(card, p);
-        card.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (longPressTriggered) { longPressTriggered = false; hidePeek(); return; }
-          if (selectMode) { toggleSelect(p.id, card); }
-          else { openLightbox(p, filtered, card); }
-        });
-        let longPressTimer;
-        let peekTimer;
-        let longPressTriggered = false;
-        let pointerStartX = 0;
-        let pointerStartY = 0;
-        const showPeek = () => {
-          const peekOverlay = document.getElementById('peekOverlay');
-          document.getElementById('peekImg').src = p.img;
-          document.getElementById('peekEmoji').textContent = p.emoji;
-          document.getElementById('peekName').textContent = p.filename;
-          document.getElementById('peekMeta').textContent = `${p.date} · ${p.location}`;
-          peekOverlay.classList.add('show');
-        };
-        const cancelPeek = () => {
-          clearTimeout(peekTimer);
-          hidePeek();
-        };
-        card.addEventListener('touchstart', (e) => {
-          longPressTriggered = false;
-          pointerStartX = e.touches[0].clientX;
-          pointerStartY = e.touches[0].clientY;
-          peekTimer = setTimeout(showPeek, 300);
-          longPressTimer = setTimeout(() => {
-            cancelPeek();
-            longPressTriggered = true;
-            if (navigator.vibrate) navigator.vibrate(10);
-            enterSelectMode(p.id, card);
-          }, 500);
-        }, { passive: true });
-        card.addEventListener('touchmove', (e) => {
-          if (Math.abs(e.touches[0].clientX - pointerStartX) > 20 || Math.abs(e.touches[0].clientY - pointerStartY) > 20) {
-            clearTimeout(longPressTimer);
-            cancelPeek();
-          }
-        }, { passive: true });
-        card.addEventListener('touchend', () => { clearTimeout(longPressTimer); cancelPeek(); });
-        card.addEventListener('touchcancel', () => { clearTimeout(longPressTimer); cancelPeek(); });
-        card.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          showCtxMenu(e, p);
-        });
-        card.draggable = true;
-        card.addEventListener('dragstart', e => {
-          e.dataTransfer.setData('text/plain', p.id.toString());
-          e.dataTransfer.effectAllowed = 'copy';
-          card.style.opacity = '0.5';
-        });
-        card.addEventListener('dragend', () => {
-          card.style.opacity = '';
-          document.querySelectorAll('.filter-chip.drag-over-album').forEach(c => c.classList.remove('drag-over-album'));
-        });
-        card.addEventListener('pointerdown', () => {
-          longPressTriggered = false;
-          longPressTimer = setTimeout(() => {
-            longPressTriggered = true;
-            if (navigator.vibrate) navigator.vibrate(10);
-            enterSelectMode(p.id, card);
-          }, 500);
-        });
-        card.addEventListener('pointermove', (e) => {
-          if (Math.abs(e.clientX - pointerStartX) > 20 || Math.abs(e.clientY - pointerStartY) > 20) {
-            clearTimeout(longPressTimer);
-          }
-        });
-        card.addEventListener('pointerup', () => { clearTimeout(longPressTimer); });
-        card.addEventListener('pointercancel', () => { clearTimeout(longPressTimer); });
-        fragment.appendChild(card);
+      });
+    }, { rootMargin: '400px' });
+
+    function createCard(p) {
+      const card = document.createElement('div');
+      card.className = 'photo-card' + (p.aiTags ? ' ai-tagged' : '') + (selectMode ? ' select-mode' : '') + (p.isFavorite ? ' is-fav' : '');
+      if (p.isDuplicate) card.style.outline = '2px solid #ff3b30';
+      if (selectedPhotos.has(p.id)) card.classList.add('selected');
+      card.style.background = p.color;
+      const editTransform = [];
+      if (p._editRotation) editTransform.push('rotate(' + p._editRotation + 'deg)');
+      if (p._editFlipH) editTransform.push('scaleX(-1)');
+      const editFilter = [];
+      if (p._editBrightness && p._editBrightness !== 100) editFilter.push('brightness(' + p._editBrightness + '%)');
+      if (p._editContrast && p._editContrast !== 100) editFilter.push('contrast(' + p._editContrast + '%)');
+      if (p._editSaturate && p._editSaturate !== 100) editFilter.push('saturate(' + p._editSaturate + '%)');
+      const es = (editTransform.length ? 'transform:' + editTransform.join(' ') + ';' : '') + (editFilter.length ? 'filter:' + editFilter.join(' ') + ';' : '');
+      card.innerHTML = '<div class="swipe-bg delete">🗑️</div>' +
+        '<div class="swipe-bg fav">❤️</div>' +
+        '<img data-src="' + p.img + '" alt="' + p.filename + '"' + (es ? ' style="' + es + '"' : '') + '>' +
+        '<div class="ai-dot"></div><div class="check-mark">✓</div>' +
+        '<span class="fav-badge">❤️</span><span class="pin-badge">📌</span>' +
+        '<div class="card-info-overlay"><div class="cio-name">' + p.filename + '</div><div class="cio-meta">' + p.date + ' · ' + p.location + '</div></div>';
+      card.dataset.photoId = p.id;
+      if (p.pinned) card.classList.add('is-pinned');
+      attachSwipe(card, p);
+
+      let longPressTimer, peekTimer, longPressTriggered = false;
+      let cX = 0, cY = 0;
+      const showPeek = () => {
+        document.getElementById('peekImg').src = p.img;
+        document.getElementById('peekEmoji').textContent = p.emoji;
+        document.getElementById('peekName').textContent = p.filename;
+        document.getElementById('peekMeta').textContent = p.date + ' · ' + p.location;
+        document.getElementById('peekOverlay').classList.add('show');
+      };
+      const cancelPeek = () => { clearTimeout(peekTimer); hidePeek(); };
+      card.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (longPressTriggered) { longPressTriggered = false; hidePeek(); return; }
+        if (selectMode) { toggleSelect(p.id, card); } else { openLightbox(p, filtered, card); }
+      });
+      card.addEventListener('touchstart', (e) => {
+        longPressTriggered = false; cX = e.touches[0].clientX; cY = e.touches[0].clientY;
+        peekTimer = setTimeout(showPeek, 300);
+        longPressTimer = setTimeout(() => { cancelPeek(); longPressTriggered = true; if (navigator.vibrate) navigator.vibrate(10); enterSelectMode(p.id, card); }, 500);
+      }, { passive: true });
+      card.addEventListener('touchmove', (e) => {
+        if (Math.abs(e.touches[0].clientX - cX) > 20 || Math.abs(e.touches[0].clientY - cY) > 20) { clearTimeout(longPressTimer); cancelPeek(); }
+      }, { passive: true });
+      card.addEventListener('touchend', () => { clearTimeout(longPressTimer); cancelPeek(); });
+      card.addEventListener('touchcancel', () => { clearTimeout(longPressTimer); cancelPeek(); });
+      card.addEventListener('contextmenu', (e) => { e.preventDefault(); showCtxMenu(e, p); });
+      card.draggable = true;
+      card.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', p.id.toString()); e.dataTransfer.effectAllowed = 'copy'; card.style.opacity = '0.5'; });
+      card.addEventListener('dragend', () => { card.style.opacity = ''; document.querySelectorAll('.filter-chip.drag-over-album').forEach(c => c.classList.remove('drag-over-album')); });
+      card.addEventListener('pointerdown', () => { longPressTriggered = false; longPressTimer = setTimeout(() => { longPressTriggered = true; if (navigator.vibrate) navigator.vibrate(10); enterSelectMode(p.id, card); }, 500); });
+      card.addEventListener('pointerup', () => { clearTimeout(longPressTimer); });
+      card.addEventListener('pointercancel', () => { clearTimeout(longPressTimer); });
+      return card;
+    }
+
+    let realCols, gap;
+    function virtualRender() {
+      const containerWidth = grid.clientWidth;
+      const style = getComputedStyle(grid);
+      gap = parseInt(style.gap) || 2;
+      const testCols = Math.round(containerWidth / (120 + gap));
+      realCols = Math.max(1, testCols);
+      const cardWidth = (containerWidth - gap * (realCols - 1)) / realCols;
+      const rowHeight = cardWidth;
+
+      let currentRow = 0, currentCol = 0;
+      const itemPositions = [];
+      for (let i = 0; i < layoutItems.length; i++) {
+        const item = layoutItems[i];
+        if (item.type === 'header') {
+          if (currentCol > 0) { currentRow++; currentCol = 0; }
+          itemPositions.push({ item: item, row: currentRow, isHeader: true });
+          currentRow++;
+        } else {
+          if (currentCol >= realCols) { currentRow++; currentCol = 0; }
+          itemPositions.push({ item: item, row: currentRow, col: currentCol, isHeader: false });
+          currentCol++;
+        }
+      }
+      const totalRows = currentRow + (currentCol > 0 ? 1 : 0);
+      const scrollTop = grid.scrollTop;
+      const viewHeight = grid.clientHeight;
+      const startRow = Math.max(0, Math.floor(scrollTop / (rowHeight + gap)) - BUFFER_ROWS);
+      const endRow = Math.min(totalRows, Math.ceil((scrollTop + viewHeight) / (rowHeight + gap)) + BUFFER_ROWS);
+
+      const newVisibleIds = new Set();
+      const newVisibleHeaders = new Set();
+      const itemsToShow = [];
+      for (const pos of itemPositions) {
+        if (pos.row >= startRow && pos.row < endRow) {
+          if (pos.isHeader) { newVisibleHeaders.add(pos.item.date); itemsToShow.push(pos); }
+          else { newVisibleIds.add(pos.item.photo.id); itemsToShow.push(pos); }
+        }
       }
 
-      grid.appendChild(fragment);
-      renderedCount = endIdx;
+      for (const [id, el] of cardPool) { if (!newVisibleIds.has(id)) { el.remove(); cardPool.delete(id); } }
+      for (const [date, el] of headerPool) { if (!newVisibleHeaders.has(date)) { el.remove(); headerPool.delete(date); } }
 
-      if (window._gridObserver) window._gridObserver.disconnect();
-      window._gridObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const img = entry.target.querySelector('img[data-src]');
-            if (img) { img.src = img.dataset.src; img.removeAttribute('data-src'); }
-            window._gridObserver.unobserve(entry.target);
+      const fragment = document.createDocumentFragment();
+      let addedCount = 0;
+      for (const pos of itemsToShow) {
+        if (pos.isHeader) {
+          if (!headerPool.has(pos.item.date)) {
+            const header = document.createElement('div');
+            header.className = 'date-group-header';
+            header.innerHTML = '<span class="date-label">' + pos.item.label + '</span><span class="date-line"></span><span class="date-count">' + pos.item.count + ' 张</span>';
+            headerPool.set(pos.item.date, header);
+            fragment.appendChild(header);
           }
-        });
-      }, { rootMargin: '200px' });
-      grid.querySelectorAll('.photo-card').forEach(c => window._gridObserver.observe(c));
-
-      const newCards = grid.querySelectorAll('.photo-card:not(.stagger-in)');
-      newCards.forEach((c, i) => {
-        c.classList.add('stagger-in');
-        c.style.animationDelay = Math.min(i * 15, 400) + 'ms';
-      });
-    }
-
-    renderBatch(0);
-
-    if (filtered.length > BATCH_SIZE) {
-      let scrollBatchIdx = 1;
-      const scrollHandler = () => {
-        const scrollPos = grid.scrollTop + grid.clientHeight;
-        const totalHeight = grid.scrollHeight;
-        if (scrollPos > totalHeight * 0.8 && renderedCount < filtered.length) {
-          renderBatch(renderedCount);
-          scrollBatchIdx++;
+        } else {
+          if (!cardPool.has(pos.item.photo.id)) {
+            const card = createCard(pos.item.photo);
+            cardPool.set(pos.item.photo.id, card);
+            fragment.appendChild(card);
+            window._gridObserver.observe(card);
+            addedCount++;
+          }
         }
-      };
-      grid.removeEventListener('scroll', grid._scrollHandler);
-      grid._scrollHandler = scrollHandler;
-      grid.addEventListener('scroll', scrollHandler, { passive: true });
+      }
+      if (fragment.childNodes.length > 0) grid.appendChild(fragment);
+
+      if (addedCount > 0) {
+        let delay = 0;
+        for (const pos of itemsToShow) {
+          if (!pos.isHeader) {
+            const card = cardPool.get(pos.item.photo.id);
+            if (card && !card._staggerDone) {
+              card._staggerDone = true;
+              card.classList.add('stagger-in');
+              card.style.animationDelay = Math.min(delay, 150) + 'ms';
+              delay += 6;
+            }
+          }
+        }
+      }
     }
+
+    grid.removeEventListener('scroll', grid._scrollHandler);
+    let scrollRAF = null;
+    grid._scrollHandler = () => {
+      if (scrollRAF) return;
+      scrollRAF = requestAnimationFrame(() => { virtualRender(); scrollRAF = null; });
+    };
+    grid.addEventListener('scroll', grid._scrollHandler, { passive: true });
+    virtualRender();
+
+    // FLIP animation on column-count change (resize / zoom)
+    if (window._gridFlipObserver) window._gridFlipObserver.disconnect();
+    let lastCols = realCols;
+    window._gridFlipObserver = new ResizeObserver(() => {
+      const w = grid.clientWidth;
+      const newCols = Math.max(1, Math.round(w / (120 + gap)));
+      if (newCols === lastCols) return;
+      const oldCols = lastCols;
+      lastCols = newCols;
+
+      // Snapshot current card positions (First)
+      const snapshots = [];
+      cardPool.forEach((el, id) => {
+        const r = el.getBoundingClientRect();
+        snapshots.push({ id, el, left: r.left, top: r.top });
+      });
+
+      // Re-render to trigger layout change (Last)
+      virtualRender();
+
+      // Invert + Play
+      requestAnimationFrame(() => {
+        const toAnimate = [];
+        snapshots.forEach(({ id, el, left, top }) => {
+          if (!cardPool.has(id)) return; // card removed
+          const now = el.getBoundingClientRect();
+          const dx = left - now.left;
+          const dy = top - now.top;
+          if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+          toAnimate.push({ el, dx, dy });
+        });
+
+        if (toAnimate.length === 0) return;
+
+        // Batch: invert all first
+        toAnimate.forEach(({ el, dx, dy }) => {
+          el.classList.add('flipping');
+          el.style.transform = `translate(${dx}px, ${dy}px)`;
+        });
+
+        // Force reflow then play
+        grid.offsetHeight;
+        toAnimate.forEach(({ el }) => {
+          el.style.transform = '';
+        });
+
+        // Cleanup
+        setTimeout(() => {
+          toAnimate.forEach(({ el }) => el.classList.remove('flipping'));
+        }, 420);
+      });
+    });
+    window._gridFlipObserver.observe(grid);
   }
 }
-
 // ═══════════════════════════════════
 // Select Mode
 // ═══════════════════════════════════
@@ -4296,6 +4631,8 @@ function toggleSelect(photoId, cardEl) {
 // ═══════════════════════════════════
 function renderTimeline() {
   const filtered = filterPhotos().sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
     const da = a.date + 'T' + a.time;
     const db = b.date + 'T' + b.time;
     return db.localeCompare(da);
@@ -4319,7 +4656,15 @@ function renderTimeline() {
       card.className = 'photo-card' + (p.aiTags ? ' ai-tagged' : '');
       if (p.isDuplicate) card.style.outline = '2px solid #ff3b30';
       card.style.background = p.color;
-      card.innerHTML = `<img src="${p.img}" alt="${p.filename}" loading="lazy"><div class="ai-dot"></div>`;
+      const tEditTransform = [];
+      if (p._editRotation) tEditTransform.push(`rotate(${p._editRotation}deg)`);
+      if (p._editFlipH) tEditTransform.push('scaleX(-1)');
+      const tEditFilter = [];
+      if (p._editBrightness && p._editBrightness !== 100) tEditFilter.push(`brightness(${p._editBrightness}%)`);
+      if (p._editContrast && p._editContrast !== 100) tEditFilter.push(`contrast(${p._editContrast}%)`);
+      if (p._editSaturate && p._editSaturate !== 100) tEditFilter.push(`saturate(${p._editSaturate}%)`);
+      const tEditStyle = (tEditTransform.length ? `transform:${tEditTransform.join(' ')};` : '') + (tEditFilter.length ? `filter:${tEditFilter.join(' ')};` : '');
+      card.innerHTML = `<img src="${p.img}" alt="${p.filename}" loading="lazy"${tEditStyle ? ` style="${tEditStyle}"` : ''}><div class="ai-dot"></div>`;
       card.addEventListener('click', () => {
         if (selectMode) toggleSelect(p.id, card);
         else openLightbox(p, filtered);
@@ -4350,7 +4695,8 @@ function openFavoritesView() {
       const card = document.createElement('div');
       card.className = 'photo-card';
       card.style.background = p.color;
-      card.innerHTML = `<img src="${p.img}" alt="${p.filename}" loading="lazy"><span class="fav-badge">❤️</span>`;
+      card.innerHTML = `<img src="${p.img}" alt="${p.filename}" loading="lazy"><span class="fav-badge">❤️</span><span class="pin-badge">📌</span>`;
+      if (p.pinned) card.classList.add('is-pinned');
       card.addEventListener('click', () => openLightbox(p, favPhotos));
       favGrid.appendChild(card);
     });
@@ -4437,7 +4783,6 @@ function renderCategoryView() {
     activeTab = 'all';
     document.querySelectorAll('.filter-chip').forEach(t => t.classList.remove('active'));
     document.querySelector('.filter-chip[data-cat="all"]').classList.add('active');
-    document.getElementById('filterCatChip').style.display = 'none';
     switchView('grid');
     renderGrid();
   });
@@ -4488,11 +4833,8 @@ function renderCategoryView() {
     card.addEventListener('click', () => {
       activeTab = key;
       document.querySelectorAll('.filter-chip').forEach(t => t.classList.remove('active'));
-      const catChip = document.getElementById('filterCatChip');
-      catChip.textContent = meta.icon + ' ' + meta.name;
-      catChip.dataset.cat = key;
-      catChip.style.display = '';
-      catChip.classList.add('active');
+      const targetChip = document.querySelector(`.filter-chip[data-cat="${key}"]`);
+      if (targetChip) targetChip.classList.add('active');
       switchView('grid');
       renderGrid();
     });
@@ -4505,7 +4847,14 @@ function renderCategoryView() {
 // ═══════════════════════════════════
 // Render Map
 // ═══════════════════════════════════
-function renderMap() {
+async function renderMap() {
+  // Lazy-load Leaflet scripts on first map open
+  if (typeof L === 'undefined') {
+    showToast('🗺️ 正在加载地图组件...');
+    await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+    await loadScript('https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js');
+  }
+
   const byLoc = {};
   photos.filter(p => !p.deleted && !p.hidden).forEach(p => {
     const key = p.location;
@@ -4625,22 +4974,51 @@ function renderMap() {
 let prevView = 'grid';
 function switchView(view) {
   const oldView = activeView;
+  if (view === oldView) return;
   activeView = view;
   hideToolbar();
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
 
-  const views = { grid, timeline: timelineView, map: mapView, category: categoryView, trash: trashView, albums: albumsView };
-  const viewOrder = ['grid', 'timeline', 'map', 'category', 'albums', 'trash'];
+  // 搜索栏、语义标签、筛选栏、回忆卡片 只在 grid 视图显示
+  const searchBar = document.querySelector('.search-bar');
+  const filterRow = document.getElementById('filterRow');
+  const semChips = document.getElementById('semanticChips');
+  const memCard = document.getElementById('memoryCard');
+  const pullInd = document.getElementById('pullIndicator');
+  const showGrid = view === 'grid';
+  if (searchBar) searchBar.style.display = showGrid ? '' : 'none';
+  if (filterRow) filterRow.style.display = showGrid ? '' : 'none';
+  if (semChips) semChips.style.display = showGrid ? '' : 'none';
+  if (memCard) memCard.style.display = showGrid && memCard.classList.contains('show') ? 'block' : 'none';
+  if (pullInd) pullInd.style.display = showGrid ? '' : 'none';
+
+  // FAB 只在 grid/timeline/category/albums 视图显示
+  const fabEl = document.getElementById('fab');
+  const fabMenuEl = document.getElementById('fabMenu');
+  const showFab = ['grid', 'timeline', 'category'].includes(view);
+  if (fabEl) { fabEl.style.display = showFab ? '' : 'none'; fabEl.classList.remove('open'); }
+  if (fabMenuEl) { fabMenuEl.classList.remove('open'); fabMenuEl.style.display = showFab ? '' : 'none'; }
+
+  const views = { grid, timeline: timelineView, map: mapView, category: categoryView, trash: trashView };
+  const viewOrder = ['grid', 'timeline', 'map', 'category', 'trash'];
   const goingForward = viewOrder.indexOf(view) > viewOrder.indexOf(oldView);
 
   Object.entries(views).forEach(([key, el]) => {
     if (key === view) {
       el.style.display = key === 'grid' ? 'grid' : '';
       el.classList.add('active');
-      el.style.animation = 'none';
-      el.offsetHeight;
-      const animName = goingForward ? 'viewSlideIn' : 'viewSlideOut';
-      el.style.animation = `${animName} 0.3s var(--md-motion-easing-emphasized)`;
+      el.style.opacity = '0';
+      el.style.transform = goingForward ? 'translateY(16px) scale(0.98)' : 'translateY(-12px) scale(0.98)';
+      el.offsetHeight; // force reflow
+      el.style.transition = 'opacity 0.28s cubic-bezier(0.2,0,0,1), transform 0.32s cubic-bezier(0.2,0,0,1)';
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0) scale(1)';
+      el.addEventListener('transitionend', function handler() {
+        el.style.transition = '';
+        el.style.opacity = '';
+        el.style.transform = '';
+        el.removeEventListener('transitionend', handler);
+      });
     } else {
       el.classList.remove('active');
       el.style.display = 'none';
@@ -4650,7 +5028,6 @@ function switchView(view) {
   emptyState.style.display = 'none';
 
   if (view === 'trash') renderTrash();
-  if (view === 'albums') renderAlbums();
   if (view === 'map' && window._leafletMap) {
     setTimeout(() => { window._leafletMap.invalidateSize(); }, 50);
   }
@@ -4746,6 +5123,11 @@ function openLightbox(photo, photoList, cardEl) {
   currentLightboxList = photoList || filterPhotos();
   currentLightboxIndex = currentLightboxList.findIndex(p => p.id === photo.id);
 
+  // 保存滚动位置
+  const gridEl = document.querySelector('.photo-grid');
+  if (gridEl) window._lbSavedScroll = gridEl.scrollTop;
+  window._lbSavedWindowScroll = window.scrollY;
+
   const card = cardEl || document.querySelector(`[data-photo-id="${photo.id}"]`);
   if (!card) {
     renderLightboxPhoto();
@@ -4758,7 +5140,7 @@ function openLightbox(photo, photoList, cardEl) {
 
   renderLightboxPhoto();
   lightbox.classList.add('animating');
-  lightbox.style.cssText = 'visibility:visible;opacity:1;pointer-events:none;background:transparent;';
+  lightbox.style.cssText = 'visibility:visible;opacity:0;pointer-events:none;background:var(--inverse-surface);';
 
   const targetRect = lbImg.getBoundingClientRect();
   const targetRadius = getComputedStyle(lbImg).borderRadius;
@@ -4785,7 +5167,7 @@ function openLightbox(photo, photoList, cardEl) {
       hero.style.width = targetRect.width + 'px';
       hero.style.height = targetRect.height + 'px';
       hero.style.borderRadius = targetRadius;
-      lightbox.style.background = 'var(--inverse-surface)';
+      lightbox.style.opacity = '1';
     });
   });
 
@@ -4821,6 +5203,7 @@ function renderLightboxPhoto() {
     <span class="lb-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>${catNames[p.category] || p.category}</span>
     ${p.isFavorite ? '<span class="lb-meta-item">❤️ 已收藏</span>' : ''}
     ${p.aiTags ? '<span class="lb-meta-item">🤖 AI</span>' : ''}
+    <span class="lb-meta-item"><span style="background:${p.color};display:inline-block;width:10px;height:10px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);vertical-align:middle;"></span> 主色</span>
   `;
   const lbRating = document.getElementById('lbRating');
   const rating = p.rating || 0;
@@ -4845,6 +5228,9 @@ function renderLightboxPhoto() {
   const heartSvg = heartBtn.querySelector('svg');
   if (p.isFavorite) { heartSvg.setAttribute('fill','currentColor'); } else { heartSvg.setAttribute('fill','none'); }
   heartBtn.classList.toggle('faved', p.isFavorite);
+  const pinBtn = document.getElementById('lbPin');
+  const pinSpan = pinBtn.querySelector('span');
+  pinSpan.textContent = p.pinned ? '取消置顶' : '置顶';
   const exifCard = document.getElementById('exifCard');
   const e = p.exif;
   exifCard.innerHTML = `<div class="exif-title">照片信息 <button class="exif-edit-btn" id="exifEditBtn">编辑</button></div><div class="exif-row">${['相机','镜头','光圈','快门','ISO','焦距','GPS','分辨率','闪光灯','文件名'].map((l,i) => {
@@ -5009,9 +5395,15 @@ function closeLightbox() {
     setTimeout(() => {
       hero.remove();
       document.body.style.overflow = '';
+      // 恢复滚动位置
+      const gridEl = document.querySelector('.photo-grid');
+      if (gridEl && window._lbSavedScroll != null) gridEl.scrollTop = window._lbSavedScroll;
+      if (card) card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }, 320);
   } else {
     document.body.style.overflow = '';
+    const gridEl = document.querySelector('.photo-grid');
+    if (gridEl && window._lbSavedScroll != null) gridEl.scrollTop = window._lbSavedScroll;
   }
 
   currentLightboxIndex = -1;
@@ -5363,25 +5755,6 @@ document.querySelectorAll('.filter-chip, .fab, .fab-menu-item, .top-bar button, 
   el.addEventListener('pointerdown', e => addRipple(e, el, true));
 });
 
-document.getElementById('lbAlbum').addEventListener('click', () => {
-  const p = currentLightboxList[currentLightboxIndex];
-  if (!p) return;
-  if (albums.length === 0) { showToast('请先在顶部标签栏点击「+ 新建」创建子相册'); return; }
-  const names = albums.map((a, i) => `${i + 1}. ${a.name}`).join('\n');
-  const choice = prompt(`添加到相册:\n${names}\n输入序号:`);
-  const idx = parseInt(choice) - 1;
-  if (idx >= 0 && idx < albums.length) {
-    if (!albums[idx].photoIds.includes(p.id)) {
-      albums[idx].photoIds.push(p.id);
-      saveAlbums();
-      renderAlbumChips();
-      showToast(`✅ 已加入「${albums[idx].name}」`);
-    } else {
-      showToast('该照片已在此相册中');
-    }
-  }
-});
-
 document.getElementById('lbDelete').addEventListener('click', () => {
   const p = currentLightboxList[currentLightboxIndex];
   if (p) {
@@ -5409,6 +5782,18 @@ document.getElementById('lbHeart').addEventListener('click', (e) => {
   showToast(p.isFavorite ? '已收藏' : '已取消收藏');
   renderGrid(); renderTimeline();
 });
+document.getElementById('lbPin').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const p = currentLightboxList[currentLightboxIndex];
+  if (!p) return;
+  p.pinned = !p.pinned;
+  savePhotoState();
+  const pinBtn = document.getElementById('lbPin');
+  const pinSpan = pinBtn.querySelector('span');
+  pinSpan.textContent = p.pinned ? '取消置顶' : '置顶';
+  showToast(p.pinned ? '📌 已置顶' : '已取消置顶');
+  renderGrid(); renderTimeline();
+});
 document.getElementById('lbExif').addEventListener('click', (e) => {
   e.stopPropagation();
   document.getElementById('exifCard').classList.toggle('show');
@@ -5430,10 +5815,20 @@ document.getElementById('lbEdit').addEventListener('click', (e) => {
   const panel = document.getElementById('editPanel');
   panel.classList.toggle('show');
   if (panel.classList.contains('show')) {
+    // Reset to adjust tab
+    document.querySelectorAll('.edit-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.edit-tab[data-etab="adjust"]').classList.add('active');
+    document.querySelectorAll('.edit-tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('etabAdjust').classList.add('active');
+    // Deactivate draw mode if it was on
+    if (drawMode) { drawMode = false; removeDrawCanvas(); }
     editRotation = 0; editFilter = 'none';
     editBrightness = 100; editContrast = 100; editSaturate = 100; editHue = 0; editBlur = 0; editFlipH = false;
     resetSliders();
     applyEditToImage();
+  } else {
+    // Closing edit panel — deactivate draw mode
+    if (drawMode) { drawMode = false; removeDrawCanvas(); }
   }
 });
 
@@ -5454,10 +5849,18 @@ function resetSliders() {
 
 document.querySelectorAll('.edit-tab').forEach(tab => {
   tab.addEventListener('click', () => {
+    // Deactivate draw mode when leaving draw tab
+    const wasDraw = document.querySelector('.edit-tab.active')?.dataset?.etab === 'draw';
     document.querySelectorAll('.edit-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.edit-tab-content').forEach(c => c.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('etab' + tab.dataset.etab.charAt(0).toUpperCase() + tab.dataset.etab.slice(1)).classList.add('active');
+    // Activate/deactivate draw mode
+    if (tab.dataset.etab === 'draw') {
+      activateDrawMode();
+    } else if (wasDraw) {
+      deactivateDrawMode();
+    }
   });
 });
 
@@ -5488,6 +5891,7 @@ document.getElementById('sliderBlur').addEventListener('input', function() {
 });
 
 document.getElementById('editClose').addEventListener('click', () => {
+  if (drawMode) deactivateDrawMode();
   document.getElementById('editPanel').classList.remove('show');
 });
 
@@ -5535,6 +5939,7 @@ document.getElementById('editSave').addEventListener('click', () => {
     saveVersion(p);
     showToast('✅ 编辑已保存');
   }
+  if (drawMode) { deactivateDrawMode(); }
   document.getElementById('editPanel').classList.remove('show');
 });
 
@@ -5580,6 +5985,7 @@ function addSearchHistory(query) {
   history.unshift(query);
   if (history.length > 8) history = history.slice(0, 8);
   try { localStorage.setItem('icv_search_history', JSON.stringify(history)); } catch {}
+  idbKVSet('searchHistory', history).catch(() => {});
 }
 function renderSearchSuggestions() {
   const history = getSearchHistory();
@@ -5632,6 +6038,7 @@ searchSuggestions.addEventListener('click', e => {
     const q = delBtn.dataset.del;
     let history = getSearchHistory().filter(h => h !== q);
     try { localStorage.setItem('icv_search_history', JSON.stringify(history)); } catch {}
+    idbKVSet('searchHistory', history).catch(() => {});
     renderSearchSuggestions();
     return;
   }
@@ -5677,7 +6084,7 @@ searchInput.addEventListener('keydown', e => {
 // ═══════════════════════════════════
 document.querySelector('.filter-row').addEventListener('click', e => {
   const chip = e.target.closest('.filter-chip');
-  if (!chip || chip.id === 'addAlbumChip' || chip.id === 'btnSelectMode') return;
+  if (!chip || chip.id === 'addAlbumChip') return;
   document.querySelectorAll('.filter-chip').forEach(t => t.classList.remove('active'));
   chip.classList.add('active');
   activeTab = chip.dataset.cat;
@@ -5691,10 +6098,17 @@ let activeAlbumChipId = null;
 function renderAlbumChips() {
   const row = document.getElementById('filterRow');
   const addBtn = document.getElementById('addAlbumChip');
-  const selectBtn = document.getElementById('btnSelectMode');
   row.querySelectorAll('.filter-chip[data-album-id]').forEach(c => c.remove());
   const allCount = document.getElementById('chipCountAll');
-  if (allCount) allCount.textContent = photos.filter(p => !p.deleted).length;
+  const active = photos.filter(p => !p.deleted);
+  if (allCount) allCount.textContent = active.length;
+  const setCount = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n > 0 ? n : ''; };
+  setCount('chipCountFav', active.filter(p => p.isFavorite).length);
+  setCount('chipCountPortrait', active.filter(p => p.category === 'portrait').length);
+  setCount('chipCountLandscape', active.filter(p => p.category === 'landscape').length);
+  setCount('chipCountPet', active.filter(p => p.category === 'pet').length);
+  setCount('chipCountFood', active.filter(p => p.category === 'food').length);
+  setCount('chipCountDoc', active.filter(p => p.category === 'document').length);
   albums.forEach(album => {
     const chip = document.createElement('button');
     chip.className = 'filter-chip' + (activeAlbumChipId === album.id ? ' active' : '');
@@ -5897,40 +6311,56 @@ function loadTheme() {
 
 function savePhotoState() {
   try {
+    const items = photos.map(p => ({
+      id: p.id,
+      isFavorite: p.isFavorite,
+      tags: p.tags,
+      aiTags: p.aiTags,
+      deleted: p.deleted || false,
+      duplicateOf: p.duplicateOf,
+      isDuplicate: p.isDuplicate || false,
+      hidden: p.hidden || false,
+      pinned: p.pinned || false
+    }));
+    // Write to IndexedDB (async, non-blocking)
+    idbBulkPut('photos', items).catch(() => {});
+    // Keep localStorage as fast fallback
     const state = {};
-    photos.forEach(p => {
-      state[p.id] = {
-        isFavorite: p.isFavorite,
-        tags: p.tags,
-        aiTags: p.aiTags,
-        deleted: p.deleted || false,
-        duplicateOf: p.duplicateOf,
-        isDuplicate: p.isDuplicate,
-        hidden: p.hidden || false
-      };
-    });
+    items.forEach(s => { state[s.id] = s; });
     localStorage.setItem('icv_photos', JSON.stringify(state));
   } catch {}
 }
 
-function loadPhotoState() {
+async function loadPhotoState() {
+  // Try IndexedDB first, fall back to localStorage
+  let state = null;
   try {
-    const raw = localStorage.getItem('icv_photos');
-    if (!raw) return;
-    const state = JSON.parse(raw);
-    photos.forEach(p => {
-      const s = state[p.id];
-      if (s) {
-        p.isFavorite = s.isFavorite;
-        p.tags = s.tags || p.tags;
-        p.aiTags = s.aiTags;
-        p.deleted = s.deleted || false;
-        p.duplicateOf = s.duplicateOf;
-        p.isDuplicate = s.isDuplicate || false;
-        p.hidden = s.hidden || false;
-      }
-    });
+    const all = await idbGetAll('photos');
+    if (all && all.length > 0) {
+      state = {};
+      all.forEach(s => { state[s.id] = s; });
+    }
   } catch {}
+  if (!state) {
+    try {
+      const raw = localStorage.getItem('icv_photos');
+      if (raw) state = JSON.parse(raw);
+    } catch {}
+  }
+  if (!state) return;
+  photos.forEach(p => {
+    const s = state[p.id];
+    if (s) {
+      p.isFavorite = s.isFavorite;
+      p.tags = s.tags || p.tags;
+      p.aiTags = s.aiTags;
+      p.deleted = s.deleted || false;
+      p.duplicateOf = s.duplicateOf;
+      p.isDuplicate = s.isDuplicate || false;
+      p.hidden = s.hidden || false;
+      p.pinned = s.pinned || false;
+    }
+  });
 }
 
 document.getElementById('btnTheme').addEventListener('click', () => {
@@ -6003,8 +6433,8 @@ function openSettings() {
     <div class="setting-row"><div><div class="s-label">📋 导出所有照片</div><div class="s-desc">打包下载 ZIP · ${totalSize.toFixed(0)} MB</div></div><button class="setting-action" onclick="printPhotoGrid()">打印</button></div>
     <div class="setting-row"><div><div class="s-label">❤️ 收藏</div><div class="s-desc">${favCount} 张已收藏 / ${photos.length} 张总计</div></div></div>
     <div class="setting-section-title">关于</div>
-    <div class="setting-row"><div><div class="s-label">ℹ️ iCloudVault</div><div class="s-desc">v0.2.0 · Agent 驱动开发</div></div></div>
-    <p style="text-align:center;color:var(--on-surface-variant);font-size:11px;margin-top:10px;">iCloudVault · MIT License<br>🧠 MiMo-V2.5-Pro + DeepSeek API 驱动</p>
+    <div class="setting-row"><div><div class="s-label">ℹ️ MiMo 相册</div><div class="s-desc">v0.3.0 · 多模态 AI 驱动</div></div></div>
+    <p style="text-align:center;color:var(--on-surface-variant);font-size:11px;margin-top:10px;">MiMo 相册 · MIT License<br>🧠 MiMo 多模态模型驱动</p>
   `;
   settingsModal.classList.add('open');
 }
@@ -6095,7 +6525,7 @@ function simulateUpload(source, realFileName) {
     const width = 400;
     const height = isLongImage ? 800 : 400;
     const newPhoto = {
-      id: newId, img: `https://picsum.photos/${width}/${height}?random=${100+newId}`, emoji: emojis[newId % emojis.length], category: categories[newId % categories.length],
+      id: newId, img: `images/${String((newId % 36) + 1).padStart(2, '0')}.png`, emoji: emojis[newId % emojis.length], category: categories[newId % categories.length],
       color: colors[newId % colors.length], date: dateStr, time: timeStr, tags: getTags(categories[newId % categories.length]),
       aiTags: null, filename: fname, size: `${(1.5+Math.random()*6).toFixed(1)} MB`,
       location: locations[newId % locations.length].name, lat: locations[newId % locations.length].lat, lng: locations[newId % locations.length].lng,
@@ -6184,11 +6614,20 @@ function startAiTagging() {
   aiOverlay.classList.add('open');
   aiLog.innerHTML = '';
   aiPercent.textContent = '0%';
-  aiStatus.textContent = '初始化 MiMo-V2.5-Pro 多模态引擎...';
+  aiStatus.textContent = '初始化 MiMo 多模态引擎...';
   aiSubstatus.textContent = '加载视觉编码器 + 文本解码器';
   aiCloseBtn.style.display = 'none';
   document.body.style.overflow = 'hidden';
-  addAiLog('🚀 启动 MiMo-V2.5-Pro 推理服务', '');
+
+  const aiTokenUsed = document.getElementById('aiTokenUsed');
+  const aiTokenRate = document.getElementById('aiTokenRate');
+  const aiTokenEst = document.getElementById('aiTokenEst');
+  const aiTokenBar = document.getElementById('aiTokenBar');
+  let totalTokens = 0;
+  const startTime = Date.now();
+  const TOKEN_PER_PHOTO = 7800; // 每张照片平均 Token 消耗
+
+  addAiLog('🚀 启动 MiMo 多模态推理服务', '');
   addAiLog('📦 加载模型权重: vision_encoder.bin (4.2GB)', '');
   addAiLog('✅ 模型加载完成 (用时 2.1s)', 'done');
 
@@ -6197,6 +6636,8 @@ function startAiTagging() {
   const toTag = photos.filter(p => !p.aiTags);
   let processed = 0;
   const total = toTag.length;
+  const estTotal = total * TOKEN_PER_PHOTO;
+  aiTokenEst.textContent = (estTotal / 1000).toFixed(0) + 'K';
   aiStatus.textContent = `开始分析 ${total} 张照片...`;
   aiSubstatus.textContent = '使用多模态视觉理解 + OCR 文字提取';
 
@@ -6215,10 +6656,13 @@ function startAiTagging() {
       aiStatus.textContent = '✅ 分类完成！';
       aiSubstatus.textContent = `已处理 ${aiTaggedCount} 张，生成 ${aiTaggedCount*3} 个标签`;
       aiPercent.textContent = '100%';
+      aiTokenBar.style.width = '100%';
       aiCloseBtn.style.display = 'block';
       addAiLog(`✅ 全部完成: ${aiTaggedCount} 张照片已分类`, 'done');
-      addAiLog(`📊 Token 消耗: ~${(aiTaggedCount*5).toLocaleString()}K (MiMo-V2.5)`, '');
-      addAiLog(`💰 预估成本: ¥${(aiTaggedCount*0.015).toFixed(2)} (DeepSeek 定价)`, '');
+      addAiLog(`📊 累计 Token: ~${totalTokens.toLocaleString()} · 均 ${(totalTokens/aiTaggedCount).toFixed(0)}/张`, '');
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      addAiLog(`⏱️ 用时 ${elapsed}s · 峰值 ${(totalTokens / elapsed).toFixed(0)} Token/s`, '');
+      addAiLog(`💰 预估成本: ¥${(aiTaggedCount*0.023).toFixed(2)} (MiMo 定价)`, '');
       refreshAllViews();
       return;
     }
@@ -6226,13 +6670,25 @@ function startAiTagging() {
     const percent = Math.round(((processed+1)/total)*100);
     aiPercent.textContent = percent + '%';
     aiStatus.textContent = `分析中: ${p.filename}`;
+
+    // 模拟三路并行推理的 Token 消耗
+    const tokensThis = 2500 + Math.floor(Math.random() * 5300); // 2500-7800
+    totalTokens += tokensThis;
+    aiTokenUsed.textContent = (totalTokens / 1000).toFixed(1) + 'K';
+    const elapsed = (Date.now() - startTime) / 1000;
+    aiTokenRate.textContent = elapsed > 0 ? (totalTokens / elapsed).toFixed(0) : '0';
+    aiTokenBar.style.width = Math.min(100, (totalTokens / estTotal) * 100) + '%';
+
     const pool = aiPossibleTags[p.category] || aiPossibleTags.other;
     const chosen = [];
     const used = new Set();
     while (chosen.length < 3) { const t = pool[Math.floor(Math.random()*pool.length)]; if (!used.has(t)) { used.add(t); chosen.push(t); } }
     p.aiTags = chosen;
-    addAiLog(`🖼️ ${p.filename} → ${chosen.join(', ')}`, 'tag');
-    aiSubstatus.textContent = `${p.emoji} 检测到: ${chosen[0]}, ${chosen[1]}`;
+
+    // 模拟三路推理日志
+    addAiLog(`🖼️ ${p.filename} → 内容: ${chosen[0]} · 场景: ${chosen[1]} · OCR: ${chosen[2]}`, 'tag');
+    addAiLog(`   └ 消耗 ${tokensThis.toLocaleString()} Token (视觉理解 2.5K + OCR 3.3K + Embedding 2K)`, '');
+    aiSubstatus.textContent = `${p.emoji} 检测到: ${chosen[0]}, ${chosen[1]} · 累计 ${(totalTokens/1000).toFixed(1)}K Token`;
     processed++;
     setTimeout(processNext, 150 + Math.random() * 400);
   }
@@ -6310,12 +6766,15 @@ function startDedup() {
   dedupScanGrid.innerHTML = '';
   for (let i = 0; i < 24; i++) { const mini = document.createElement('div'); mini.className = 'mini'; mini.textContent = emojis[i % emojis.length]; dedupScanGrid.appendChild(mini); }
   dedupPhase.textContent = '阶段 1/3: 计算 pHash 感知指纹...';
+  const dedupActive = photos.filter(p => !p.deleted && !p.hidden);
+  const pairCount = Math.floor(dedupActive.length * (dedupActive.length - 1) / 2);
+  const dedupTokens = dedupActive.length * 1800 + pairCount * 50; // embedding + comparison
   setTimeout(() => {
     dedupProgressFill.style.width = '33%';
-    dedupPhase.textContent = '阶段 2/3: 生成 CLIP 特征向量 (Embedding)...';
+    dedupPhase.textContent = `阶段 2/3: 生成 Embedding 向量 (消耗 ~${(dedupActive.length * 1800 / 1000).toFixed(1)}K Token)...`;
     setTimeout(() => {
       dedupProgressFill.style.width = '66%';
-      dedupPhase.textContent = '阶段 3/3: 余弦相似度比对 630 对...';
+      dedupPhase.textContent = `阶段 3/3: 余弦相似度比对 ${pairCount} 对...`;
       setTimeout(() => {
         dedupProgressFill.style.width = '100%';
         dedupPhase.textContent = '✅ 扫描完成';
@@ -6327,7 +6786,7 @@ function startDedup() {
         ];
         dupPairs.forEach(pair => { pair.a.isDuplicate = true; pair.a.duplicateOf = pair.b.id; pair.b.isDuplicate = true; pair.b.duplicateOf = pair.a.id; });
         const dupCount = new Set(dupPairs.flatMap(p => [p.a.id, p.b.id])).size;
-        dedupSummary.innerHTML = `<div class="found">${dupPairs.length} 组重复</div><div>涉及 ${dupCount} 张照片 · 可释放 ${(dupPairs.length*4.7).toFixed(1)} MB</div>`;
+        dedupSummary.innerHTML = `<div class="found">${dupPairs.length} 组重复</div><div>涉及 ${dupCount} 张照片 · 可释放 ${(dupPairs.length*4.7).toFixed(1)} MB</div><div style="font-size:11px;color:var(--on-surface-variant);margin-top:4px;">⚡ 消耗 ~${(dedupTokens/1000).toFixed(1)}K Token · Embedding ${dedupActive.length} 张 + 比对 ${pairCount} 对</div>`;
         dedupSummary.style.display = 'block';
         dedupResults.innerHTML = '';
         dupPairs.forEach(pair => {
@@ -6487,7 +6946,7 @@ function printPhotoGrid() {
   const photosHtml = activePhotos.slice(0, 60).map(p =>
     `<div style="break-inside:avoid;margin:4px;"><img src="${p.img}" style="width:100%;height:150px;object-fit:cover;border-radius:4px;"><div style="font-size:10px;color:#666;margin-top:2px;">${p.filename} · ${p.date}</div></div>`
   ).join('');
-  printWin.document.write('<!DOCTYPE html><html><head><title>iCloudVault 照片打印</title><style>body{margin:16px;font-family:system-ui;}h1{font-size:18px;margin-bottom:8px;}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}@media print{.grid{grid-template-columns:repeat(3,1fr);}}</style></head><body><h1>\uD83D\uDCF0 iCloudVault 照片 (' + activePhotos.length + ' 张)</h1><div class="grid">' + photosHtml + '</div><scr' + 'ipt>setTimeout(()=>window.print(),500)</scr' + 'ipt></body></html>');
+  printWin.document.write('<!DOCTYPE html><html><head><title>MiMo 相册 照片打印</title><style>body{margin:16px;font-family:system-ui;}h1{font-size:18px;margin-bottom:8px;}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}@media print{.grid{grid-template-columns:repeat(3,1fr);}}</style></head><body><h1>\uD83D\uDCF0 MiMo 相册 照片 (' + activePhotos.length + ' 张)</h1><div class="grid">' + photosHtml + '</div><scr' + 'ipt>setTimeout(()=>window.print(),500)</scr' + 'ipt></body></html>');
   printWin.document.close();
 }
 
@@ -6502,21 +6961,21 @@ document.getElementById('shortcutsOverlay').addEventListener('click', e => {
 });
 
 const onboardSteps = [
-  { icon: '👋', title: '欢迎使用 iCloudVault', desc: '一个安全、智能的私密相册应用。让我们快速了解如何使用。', gestures: [] },
-  { icon: '👆', title: '浏览与预览', desc: '', gestures: [
-    { icon: '👆', title: '点击照片', desc: '全屏查看照片详情' },
-    { icon: '✋', title: '长按照片', desc: '快速预览大图' },
-    { icon: '👈', title: '左右滑动', desc: '切换上一张/下一张' },
+  { icon: '🧠', title: '欢迎使用 MiMo 相册', desc: '基于小米 MiMo 多模态大模型的智能相册管理引擎。每张照片经过 AI 三路并行推理（内容理解 + OCR + Embedding），让你的相册变得可搜索、可分类、可去重。', gestures: [] },
+  { icon: '🤖', title: 'AI 能力', desc: '', gestures: [
+    { icon: '🏷️', title: '智能分类', desc: '多模态模型自动识别 12 维标签' },
+    { icon: '🔍', title: '语义搜索', desc: '输入"去年在海边拍的日落"即可找到' },
+    { icon: '🔄', title: '去重检测', desc: 'pHash + 向量双重引擎，精确识别重复' },
   ]},
-  { icon: '🔍', title: '多选与操作', desc: '', gestures: [
-    { icon: '✋', title: '长按不放', desc: '进入多选模式' },
+  { icon: '👆', title: '浏览与操作', desc: '', gestures: [
+    { icon: '👆', title: '点击照片', desc: '全屏查看照片详情' },
     { icon: '👉', title: '左右滑动卡片', desc: '快速收藏或删除' },
-    { icon: '🖱️', title: '右键点击', desc: '打开快捷操作菜单' },
+    { icon: '🖱️', title: '右键/长按', desc: '打开快捷操作菜单（置顶、标签等）' },
   ]},
   { icon: '✨', title: '更多功能', desc: '', gestures: [
-    { icon: '🤏', title: '双指缩放', desc: '放大查看照片细节' },
-    { icon: '⭐', title: '星级评分', desc: '为照片打分标记' },
-    { icon: '❤️', title: '收藏照片', desc: '快速收藏喜欢的照片' },
+    { icon: '🖼️', title: '拼图合成', desc: '多张照片自动排版，一键下载' },
+    { icon: '✏️', title: '编辑工具', desc: '裁剪旋转、滤镜、标注绘制' },
+    { icon: '🔒', title: 'PIN 锁屏', desc: '4 位密码保护你的私密照片' },
   ]},
 ];
 let onboardIdx = 0;
@@ -6723,8 +7182,8 @@ async function tryBioUnlock() {
     const credential = await navigator.credentials.create({
       publicKey: {
         challenge,
-        rp: { name: 'iCloudVault' },
-        user: { id: new Uint8Array(16), name: 'user@icloudvault', displayName: 'User' },
+        rp: { name: 'MiMo 相册' },
+        user: { id: new Uint8Array(16), name: 'user@mimo-album', displayName: 'User' },
         pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
         authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
         timeout: 30000
@@ -6885,7 +7344,7 @@ function goOnboardSlide(idx) {
 }
 
 document.getElementById('obNext').addEventListener('click', () => {
-  if (obIndex === totalSlides - 1) { onboard.classList.remove('open'); localStorage.setItem('icv_onboard_done','1'); document.body.style.overflow = ''; showToast('欢迎使用 iCloudVault'); }
+  if (obIndex === totalSlides - 1) { onboard.classList.remove('open'); localStorage.setItem('icv_onboard_done','1'); document.body.style.overflow = ''; showToast('欢迎使用 MiMo 相册'); }
   else { goOnboardSlide(obIndex + 1); }
 });
 document.getElementById('obSkip').addEventListener('click', () => { onboard.classList.remove('open'); localStorage.setItem('icv_onboard_done','1'); document.body.style.overflow = ''; });
@@ -7472,19 +7931,20 @@ let drawHistory = [];
 let isDrawing = false;
 let drawStartX = 0, drawStartY = 0;
 
-document.getElementById('lbDraw').addEventListener('click', (e) => {
-  e.stopPropagation();
-  drawMode = !drawMode;
+function activateDrawMode() {
+  if (drawMode) return;
+  drawMode = true;
   const toolbar = document.getElementById('drawToolbar');
-  if (drawMode) {
-    toolbar.classList.add('show');
-    initDrawCanvas();
-  } else {
-    toolbar.classList.remove('show');
-    removeDrawCanvas();
-  }
-});
-
+  if (toolbar) toolbar.classList.add('show');
+  initDrawCanvas();
+}
+function deactivateDrawMode() {
+  if (!drawMode) return;
+  drawMode = false;
+  const toolbar = document.getElementById('drawToolbar');
+  if (toolbar) toolbar.classList.remove('show');
+  removeDrawCanvas();
+}
 function initDrawCanvas() {
   removeDrawCanvas();
   drawCanvas = document.createElement('canvas');
@@ -7624,8 +8084,6 @@ document.getElementById('drawUndo').addEventListener('click', () => {
 });
 
 document.getElementById('drawDone').addEventListener('click', () => {
-  drawMode = false;
-  document.getElementById('drawToolbar').classList.remove('show');
   if (drawCanvas && drawHistory.length > 0) {
     const p = currentLightboxList[currentLightboxIndex];
     if (p) {
@@ -7633,7 +8091,7 @@ document.getElementById('drawDone').addEventListener('click', () => {
       showToast('✅ 标注已保存');
     }
   }
-  removeDrawCanvas();
+  deactivateDrawMode();
 });
 
 document.getElementById('exifCard').addEventListener('click', e => {
@@ -7685,7 +8143,8 @@ function openHiddenView() {
       const card = document.createElement('div');
       card.className = 'photo-card';
       card.style.background = p.color;
-      card.innerHTML = `<img src="${p.img}" alt="${p.filename}" loading="lazy"><span class="fav-badge">🔒</span>`;
+      card.innerHTML = `<img src="${p.img}" alt="${p.filename}" loading="lazy"><span class="fav-badge">🔒</span><span class="pin-badge">📌</span>`;
+      if (p.pinned) card.classList.add('is-pinned');
       card.addEventListener('click', () => openLightbox(p, hiddenPhotos));
       hiddenGrid.appendChild(card);
     });
@@ -7723,7 +8182,7 @@ document.getElementById('lbHide').addEventListener('click', (e) => {
 
 let smartAlbums = [];
 function loadSmartAlbums() { try { smartAlbums = JSON.parse(localStorage.getItem('icv_smart_albums')) || []; } catch { smartAlbums = []; } }
-function saveSmartAlbums() { try { localStorage.setItem('icv_smart_albums', JSON.stringify(smartAlbums)); } catch {} }
+function saveSmartAlbums() { try { localStorage.setItem('icv_smart_albums', JSON.stringify(smartAlbums)); } catch {} idbKVSet('smartAlbums', smartAlbums).catch(() => {}); }
 loadSmartAlbums();
 
 function getSmartAlbumPhotos(sa) {
@@ -7799,11 +8258,6 @@ document.getElementById('saCreate').addEventListener('click', () => {
   showToast(`🧠 智能相册「${name}」已创建，匹配 ${count} 张照片`);
 });
 
-document.getElementById('fabSmartAlbum').addEventListener('click', () => {
-  fabMenu.classList.remove('open'); fabBtn.classList.remove('open');
-  document.getElementById('smartAlbumDialog').classList.add('open');
-});
-
 function showMemories() {
   const now = new Date();
   const thisMonth = now.getMonth() + 1;
@@ -7850,11 +8304,51 @@ document.getElementById('memoryClose').addEventListener('click', () => {
 });
 
 setGridCols(3);
-loadPhotoState();
-applyTheme(loadTheme());
-renderGrid(); renderTimeline(); renderCategoryView(); renderMap(); renderAlbumChips();
-showMemories();
-renderSmartAlbumChips();
+// One-time migration: localStorage → IndexedDB
+async function migrateLocalStorageToIDB() {
+  try {
+    const existing = await idbGetAll('photos');
+    if (existing && existing.length > 0) return; // Already migrated
+    const raw = localStorage.getItem('icv_photos');
+    if (raw) {
+      const state = JSON.parse(raw);
+      const items = Object.entries(state).map(([id, s]) => ({ id, ...s }));
+      if (items.length > 0) await idbBulkPut('photos', items);
+    }
+    const albumRaw = localStorage.getItem('icv_albums');
+    if (albumRaw) await idbKVSet('albums', JSON.parse(albumRaw));
+    const smartRaw = localStorage.getItem('icv_smart_albums');
+    if (smartRaw) await idbKVSet('smartAlbums', JSON.parse(smartRaw));
+    const histRaw = localStorage.getItem('icv_search_history');
+    if (histRaw) await idbKVSet('searchHistory', JSON.parse(histRaw));
+  } catch {}
+}
+
+// Load from IDB if available, overriding localStorage values
+async function loadFromIDB() {
+  try {
+    const idbAlbums = await idbKVGet('albums');
+    if (idbAlbums) {
+      albums.length = 0;
+      idbAlbums.forEach(a => albums.push(a));
+    }
+  } catch {}
+  try {
+    const idbSmart = await idbKVGet('smartAlbums');
+    if (idbSmart) { smartAlbums.length = 0; idbSmart.forEach(a => smartAlbums.push(a)); }
+  } catch {}
+}
+
+(async () => {
+  await migrateLocalStorageToIDB();
+  await loadPhotoState();
+  await loadFromIDB();
+  applyTheme(loadTheme());
+  renderGrid(); renderTimeline(); renderCategoryView(); renderMap(); renderAlbumChips();
+  showMemories();
+  renderSmartAlbumChips();
+  setTimeout(applyRealColors, 500);
+})();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -7863,23 +8357,18 @@ if ('serviceWorker' in navigator) {
 if (lockEnabled && localStorage.getItem('icv_onboard_done')) { lockScreen.classList.add('open'); }
 else if (!localStorage.getItem('icv_onboard_done')) { checkOnboard(); }
 
-if (!lockEnabled || !localStorage.getItem('icv_onboard_done')) { setTimeout(startAutoAi, 3000); }
+if (!lockEnabled || !localStorage.getItem('icv_onboard_done')) { setTimeout(startAutoAi, 8000); }
 else {
   const origCheckOnboard = checkOnboard;
-  checkOnboard = function() { origCheckOnboard(); setTimeout(startAutoAi, 2000); };
+  checkOnboard = function() { origCheckOnboard(); setTimeout(startAutoAi, 5000); };
 }
 const origEnterPin = enterPin;
 enterPin = function(d) {
   origEnterPin(d);
-  if (pinEntry.length === 4 && pinEntry === CORRECT_PIN) { setTimeout(startAutoAi, 2000); }
+  if (pinEntry.length === 4 && pinEntry === CORRECT_PIN) { setTimeout(startAutoAi, 5000); }
 };
 
-// 预加载 AI 模型（空闲时加载）
-if ('requestIdleCallback' in window) {
-  requestIdleCallback(() => loadMobileNet(), { timeout: 5000 });
-} else {
-  setTimeout(() => loadMobileNet(), 3000);
-}
+// AI 模型不预加载 — 只在用户触发 AI 功能时按需加载
 </script>
 </body>
 </html>
