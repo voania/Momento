@@ -1,4 +1,4 @@
-package com.mimoapp
+package com.momento
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
